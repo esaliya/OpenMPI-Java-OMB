@@ -1,4 +1,4 @@
-package org.saliya.omb;
+package org.saliya.omb.collectives;
 
 import mpi.Intracomm;
 import mpi.MPI;
@@ -66,7 +66,7 @@ public class OsuAllreduce {
                 }
                 comm.barrier();
             }
-            double latency = ((double)timer*1e6)/iterations;
+            double latency = (timer *1e6)/iterations;
             vbuff[0] = latency;
             comm.reduce(vbuff,1,MPI.DOUBLE,MPI.MIN,0);
             minLatency = vbuff[0];

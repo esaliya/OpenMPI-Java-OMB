@@ -1,4 +1,4 @@
-package org.saliya.omb;
+package org.saliya.omb.p2p;
 
 import mpi.Intracomm;
 import mpi.MPI;
@@ -66,7 +66,6 @@ public class OsuLaten {
             comm.barrier();
 
             double tStart = 0.0, tStop = 0.0;
-            double minLatency, maxLatency, avgLatency;
 
             if (rank == 0){
                 for (int i = 0; i < iterations + skip; ++i){
