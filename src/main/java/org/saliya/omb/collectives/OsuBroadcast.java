@@ -63,6 +63,7 @@ public class OsuBroadcast {
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
                 comm.bcast(sbuff,numFloats,MPI.FLOAT, 0);
+                //Use command P to show available parameters//
                 tStop = MPI.wtime();
                 if (i >= skip){
                     timer += tStop - tStart;
