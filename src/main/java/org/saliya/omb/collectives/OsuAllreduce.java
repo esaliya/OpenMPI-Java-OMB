@@ -15,7 +15,7 @@ public class OsuAllreduce {
         int rank = comm.getRank();
         int numProcs = comm.getSize();
 
-        int maxMsgSize = 1048576; // 1MB, i.e. 1024x1024 bytes
+        int maxMsgSize = 1<<20; // 1MB, i.e. 1024x1024 bytes
         int largeMsgSize = 8192;
         int skip = 200;
         int skipLarge = 10;

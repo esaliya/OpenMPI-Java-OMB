@@ -9,6 +9,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 
+/**
+ * @author Saliya Ekanayake (esaliya at gmail dot com)
+ */
+
 public class OsuLaten {
     public static void main(String[] args) throws MPIException {
         MPI.Init(args);
@@ -23,11 +27,11 @@ public class OsuLaten {
             return;
         }
 
-        int maxMsgSize = 1<<10; // 1KB, i.e. 1024 bytes
+        int maxMsgSize = 1<<20; // 1MB, i.e. 1024x1024 bytes
         int largeMsgSize = 8192;
-        int skip = 1000;
+        int skip = 200;
         int skipLarge = 10;
-        int iterations = 10000;
+        int iterations = 1000;
         int iterationsLarge = 100;
 
         if (args.length >= 1){
@@ -41,8 +45,6 @@ public class OsuLaten {
         int byteBytes = maxMsgSize;
         ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
         ByteBuffer rbuff = MPI.newByteBuffer(byteBytes);
-
-
 
         String msg = "Rank " + rank + " is on " + MPI.getProcessorName() + "\n";
         msg = MpiOps.allReduceStr(msg, comm);
