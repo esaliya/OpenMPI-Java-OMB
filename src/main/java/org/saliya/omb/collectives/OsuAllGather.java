@@ -62,7 +62,7 @@ public class OsuAllGather {
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
-                comm.allGather(sbuff,numBytes,MPI.CHAR,rbuff,numBytes,MPI.CHAR);
+                comm.allGather(sbuff,numBytes,MPI.BYTE,rbuff,numBytes,MPI.BYTE);
                 tStop = MPI.wtime();
                 if (i >= skip){
                     timer += tStop - tStart;
