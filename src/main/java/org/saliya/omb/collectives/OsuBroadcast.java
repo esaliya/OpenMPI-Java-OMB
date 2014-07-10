@@ -62,7 +62,7 @@ public class OsuBroadcast {
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
-                comm.bcast(sbuff,numBytes,MPI.CHAR, 0);
+                comm.bcast(sbuff,numBytes,MPI.BYTE, 0);
                 tStop = MPI.wtime();
                 if (i >= skip){
                     timer += tStop - tStart;
