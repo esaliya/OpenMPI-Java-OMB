@@ -4,7 +4,6 @@ import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
 
-
 public class MpiOps {
     public static String allReduceStr(String value, Intracomm comm) throws MPIException {
         int size = comm.getSize();
