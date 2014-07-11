@@ -1,4 +1,4 @@
-package org.saliya.util;
+package org.saliya.ompi.util;
 
 import mpi.Intracomm;
 import mpi.MPI;

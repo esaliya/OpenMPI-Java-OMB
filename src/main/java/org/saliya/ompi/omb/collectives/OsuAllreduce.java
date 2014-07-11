@@ -1,18 +1,13 @@
-package org.saliya.omb.collectives;
+package org.saliya.ompi.omb.collectives;
 
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
-import org.saliya.util.MpiOps;
+import org.saliya.ompi.util.MpiOps;
 
 import java.nio.ByteBuffer;
 
-/**
- * @author Saliya Ekanayake (esaliya at gmail dot com)
- *         Nigel Pugh (nigel dot pugh32 at gmail dot com)
- */
-
-public class OsuBroadcast {
+public class OsuAllreduce {
     public static void main(String[] args) throws MPIException {
         MPI.Init(args);
 
@@ -35,8 +30,14 @@ public class OsuBroadcast {
             iterations = iterationsLarge = Integer.parseInt(args[1]);
         }
 
-        int byteBytes = maxMsgSize;
-        ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
+        int floatBytes = (maxMsgSize/4) * 4;
+        ByteBuffer sbuff = MPI.newByteBuffer(floatBytes);
+        ByteBuffer rbuff = MPI.newByteBuffer(floatBytes);
+
+        for (int i = 0; i < floatBytes; ++i){
+            sbuff.put((byte)1);
+            rbuff.put((byte)0);
+        }
 
         String msg = "Rank " + rank + " is on " + MPI.getProcessorName() + "\n";
         msg = MpiOps.allReduceStr(msg, comm);
@@ -46,12 +47,8 @@ public class OsuBroadcast {
         }
 
         double [] vbuff = new double[1];
-        for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
-            for (int i = 0; i < byteBytes; ++i){
-                sbuff.put(i,(byte)'a');
-            }
-
-            if (numBytes > largeMsgSize){
+        for (int numFloats = 1; numFloats*4 <= maxMsgSize; numFloats *= 2){
+            if (numFloats > largeMsgSize){
                 skip = skipLarge;
                 iterations = iterationsLarge;
             }
@@ -62,7 +59,7 @@ public class OsuBroadcast {
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
-                comm.bcast(sbuff,numBytes,MPI.BYTE, 0);
+                comm.allReduce(sbuff,rbuff,numFloats,MPI.FLOAT, MPI.SUM);
                 tStop = MPI.wtime();
                 if (i >= skip){
                     timer += tStop - tStart;
@@ -80,11 +77,10 @@ public class OsuBroadcast {
             comm.reduce(vbuff,1,MPI.DOUBLE,MPI.SUM,0);
             avgLatency = vbuff[0] / numProcs;
             if (rank == 0){
-                System.out.println(numBytes + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
+                System.out.println(numFloats*4 + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
             }
             comm.barrier();
         }
         MPI.Finalize();
-
     }
 }

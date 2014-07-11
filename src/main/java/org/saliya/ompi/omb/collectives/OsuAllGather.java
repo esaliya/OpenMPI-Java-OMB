@@ -1,13 +1,17 @@
-package org.saliya.omb.collectives;
+package org.saliya.ompi.omb.collectives;
 
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
-import org.saliya.util.MpiOps;
+import org.saliya.ompi.util.MpiOps;
 
 import java.nio.ByteBuffer;
 
-public class OsuAllreduce {
+/**
+ * @author Saliya Ekanayake (esaliya at gmail dot com)
+ *         Tori Wilbon (toriwilbon at gmail dot com)
+ */
+public class OsuAllGather {
     public static void main(String[] args) throws MPIException {
         MPI.Init(args);
 
@@ -30,14 +34,9 @@ public class OsuAllreduce {
             iterations = iterationsLarge = Integer.parseInt(args[1]);
         }
 
-        int floatBytes = (maxMsgSize/4) * 4;
-        ByteBuffer sbuff = MPI.newByteBuffer(floatBytes);
-        ByteBuffer rbuff = MPI.newByteBuffer(floatBytes);
-
-        for (int i = 0; i < floatBytes; ++i){
-            sbuff.put((byte)1);
-            rbuff.put((byte)0);
-        }
+        int byteBytes = maxMsgSize;
+        ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
+        ByteBuffer rbuff = MPI.newByteBuffer(byteBytes * numProcs);
 
         String msg = "Rank " + rank + " is on " + MPI.getProcessorName() + "\n";
         msg = MpiOps.allReduceStr(msg, comm);
@@ -47,8 +46,12 @@ public class OsuAllreduce {
         }
 
         double [] vbuff = new double[1];
-        for (int numFloats = 1; numFloats*4 <= maxMsgSize; numFloats *= 2){
-            if (numFloats > largeMsgSize){
+        for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
+            for (int i = 0; i < byteBytes; ++i){
+                sbuff.put(i,(byte)'a');
+            }
+
+            if (numBytes > largeMsgSize){
                 skip = skipLarge;
                 iterations = iterationsLarge;
             }
@@ -59,7 +62,7 @@ public class OsuAllreduce {
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
-                comm.allReduce(sbuff,rbuff,numFloats,MPI.FLOAT, MPI.SUM);
+                comm.allGather(sbuff, numBytes, MPI.BYTE, rbuff, numBytes, MPI.BYTE);
                 tStop = MPI.wtime();
                 if (i >= skip){
                     timer += tStop - tStart;
@@ -77,10 +80,11 @@ public class OsuAllreduce {
             comm.reduce(vbuff,1,MPI.DOUBLE,MPI.SUM,0);
             avgLatency = vbuff[0] / numProcs;
             if (rank == 0){
-                System.out.println(numFloats*4 + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
+                System.out.println(numBytes + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
             }
             comm.barrier();
         }
         MPI.Finalize();
+
     }
 }

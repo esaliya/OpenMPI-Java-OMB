@@ -1,17 +1,18 @@
-package org.saliya.omb.collectives;
+package org.saliya.ompi.omb.collectives;
 
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
-import org.saliya.util.MpiOps;
+import org.saliya.ompi.util.MpiOps;
 
 import java.nio.ByteBuffer;
 
 /**
  * @author Saliya Ekanayake (esaliya at gmail dot com)
- *         Tori Wilbon (toriwilbon at gmail dot com)
+ *         Nigel Pugh (nigel dot pugh32 at gmail dot com)
  */
-public class OsuAllGather {
+
+public class OsuBroadcast {
     public static void main(String[] args) throws MPIException {
         MPI.Init(args);
 
@@ -36,7 +37,6 @@ public class OsuAllGather {
 
         int byteBytes = maxMsgSize;
         ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
-        ByteBuffer rbuff = MPI.newByteBuffer(byteBytes * numProcs);
 
         String msg = "Rank " + rank + " is on " + MPI.getProcessorName() + "\n";
         msg = MpiOps.allReduceStr(msg, comm);
@@ -62,7 +62,7 @@ public class OsuAllGather {
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
-                comm.allGather(sbuff,numBytes,MPI.BYTE,rbuff,numBytes,MPI.BYTE);
+                comm.bcast(sbuff, numBytes, MPI.BYTE, 0);
                 tStop = MPI.wtime();
                 if (i >= skip){
                     timer += tStop - tStart;

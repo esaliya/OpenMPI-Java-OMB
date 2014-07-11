@@ -1,9 +1,9 @@
-package org.saliya.omb.p2p;
+package org.saliya.ompi.omb.p2p;
 
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
-import org.saliya.util.MpiOps;
+import org.saliya.ompi.util.MpiOps;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
