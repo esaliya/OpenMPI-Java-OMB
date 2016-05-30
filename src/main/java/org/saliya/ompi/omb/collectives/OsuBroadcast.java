@@ -49,7 +49,7 @@ public class OsuBroadcast {
         double [] vbuff = new double[1];
         for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
-                sbuff.put(i,(byte)'a');
+                sbuff.put(i,((byte)(((byte)'a')%26)));
             }
 
             if (numBytes > largeMsgSize){
@@ -77,8 +77,8 @@ public class OsuBroadcast {
                     // TODO - debugs
                     if (ParallelOps.worldProcRank == 33) {
                         StringBuilder sb = new StringBuilder();
-                        for (int j = 0; j < byteBytes; ++j) {
-                            sb.append(sbuff.get(i)).append(' ');
+                        for (int j = 0; j < numBytes; ++j) {
+                            sb.append((char)sbuff.get(i)).append(' ');
                         }
                         System.out.println(sb.toString());
                     }
