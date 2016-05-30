@@ -51,7 +51,13 @@ public class OsuBroadcast {
         double [] vbuff = new double[1];
         for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
-                sbuff.put(i,((byte)'a'));
+                /*sbuff.put(i,((byte)'a'));*/
+                // TODO - debugs
+                if (ParallelOps.worldProcRank == 0){
+                    sbuff.put(i,((byte)'b'));
+                } else {
+                    sbuff.put(i,((byte)'z'));
+                }
             }
 
             if (numBytes > largeMsgSize){
@@ -85,10 +91,12 @@ public class OsuBroadcast {
                         System.out.println(sb.toString());
                     }
                     stop = true;
+                    break;
                 }
 
                 ParallelOps.worldProcsComm.barrier();
             }
+            // TODO - debugs
             if (stop) break;
 
             double latency = (timer *1e6)/iterations;
