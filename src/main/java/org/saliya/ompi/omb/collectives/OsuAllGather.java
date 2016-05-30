@@ -3,8 +3,10 @@ package org.saliya.ompi.omb.collectives;
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
+import org.saliya.ompi.omb.ParallelOps;
 import org.saliya.ompi.util.MpiOps;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -12,7 +14,7 @@ import java.nio.ByteBuffer;
  *         Tori Wilbon (toriwilbon at gmail dot com)
  */
 public class OsuAllGather {
-    public static void main(String[] args) throws MPIException {
+    public static void main(String[] args) throws MPIException, IOException {
         MPI.Init(args);
 
         Intracomm comm = MPI.COMM_WORLD;
@@ -33,6 +35,10 @@ public class OsuAllGather {
         if (args.length == 2){
             iterations = iterationsLarge = Integer.parseInt(args[1]);
         }
+
+        String mmapDir = args[2];
+        ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
+        Boolean isMmap = Boolean.parseBoolean(args[3]);
 
         int byteBytes = maxMsgSize;
         ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
@@ -62,7 +68,11 @@ public class OsuAllGather {
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
-                comm.allGather(sbuff, numBytes, MPI.BYTE, rbuff, numBytes, MPI.BYTE);
+                if (!isMmap) {
+                    comm.allGather(sbuff, numBytes, MPI.BYTE, rbuff, numBytes, MPI.BYTE);
+                } else {
+                    ParallelOps.allGather(sbuff, numBytes, rbuff);
+                }
                 tStop = MPI.wtime();
                 if (i >= skip){
                     timer += tStop - tStart;
@@ -84,7 +94,7 @@ public class OsuAllGather {
             }
             comm.barrier();
         }
-        MPI.Finalize();
 
+        ParallelOps.endParallelism();
     }
 }

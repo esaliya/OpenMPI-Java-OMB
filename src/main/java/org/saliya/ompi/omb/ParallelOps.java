@@ -55,8 +55,11 @@ public class ParallelOps {
     public static int[] cgProcsMmapXDisplas;
 
     public static String mmapCollectiveFileName;
+    public static String mmapCollectiveFileName2;
     public static Bytes mmapCollectiveBytes;
+    public static Bytes mmapCollectiveBytes2;
     public static ByteBuffer mmapCollectiveByteBuffer;
+    public static ByteBuffer mmapCollectiveByteBuffer2;
 
     private static IntBuffer intBuffer;
 
@@ -124,18 +127,28 @@ public class ParallelOps {
 
         /* Allocate memory maps for collective communications like AllReduce and Broadcast */
         mmapCollectiveFileName = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective.bin";
+        mmapCollectiveFileName2 = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective2.bin";
         try (FileChannel mmapCollectiveFc = FileChannel
                 .open(Paths.get(mmapScratchDir, mmapCollectiveFileName),
                         StandardOpenOption.CREATE, StandardOpenOption.READ,
-                        StandardOpenOption.WRITE)) {
+                        StandardOpenOption.WRITE);
+             FileChannel mmapCollectiveFc2 = FileChannel
+                     .open(Paths.get(mmapScratchDir, mmapCollectiveFileName2),
+                             StandardOpenOption.CREATE, StandardOpenOption.READ,
+                             StandardOpenOption.WRITE)) {
 
             mmapCollectiveBytes = ByteBufferBytes.wrap(mmapCollectiveFc.map(
                     FileChannel.MapMode.READ_WRITE, 0L, maxMsgSize*mmapProcsCount));
+            mmapCollectiveBytes2 = ByteBufferBytes.wrap(mmapCollectiveFc2.map(
+                    FileChannel.MapMode.READ_WRITE, 0L, maxMsgSize*mmapProcsCount));
             mmapCollectiveByteBuffer = mmapCollectiveBytes.sliceAsByteBuffer(mmapCollectiveByteBuffer);
+            mmapCollectiveByteBuffer2 = mmapCollectiveBytes2.sliceAsByteBuffer(mmapCollectiveByteBuffer2);
 
             if (isMmapLead){
-                for (int i = 0; i < maxMsgSize; ++i)
-                    mmapCollectiveBytes.writeByte(i,0);
+                for (int i = 0; i < maxMsgSize; ++i) {
+                    mmapCollectiveBytes.writeByte(i, 0);
+                    mmapCollectiveBytes2.writeByte(i, 0);
+                }
             }
         }
     }
@@ -236,4 +249,18 @@ public class ParallelOps {
         return (mmapLeadWorldRank <= rank && rank <= (mmapLeadWorldRank+mmapProcsCount));
     }
 
+    public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException {
+        int offset = mmapProcRank*numBytes;
+        for (int i = 0; i < numBytes; ++i){
+            mmapCollectiveBytes.writeByte(offset+i, sbuff.get(i));
+        }
+        worldProcsComm.barrier();
+        if(isMmapLead){
+            cgProcComm.allGather(mmapCollectiveByteBuffer, numBytes*mmapProcsCount, MPI.BYTE, mmapCollectiveByteBuffer2, numBytes*mmapProcsCount, MPI.BYTE);
+        }
+        worldProcsComm.barrier();
+        for (int i = 0; i < numBytes*mmapProcsCount; ++i){
+            rbuff.put(i, mmapCollectiveBytes2.readByte(i));
+        }
+    }
 }
