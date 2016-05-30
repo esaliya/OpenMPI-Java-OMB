@@ -142,7 +142,7 @@ public class ParallelOps {
             mmapCollectiveBytes = ByteBufferBytes.wrap(mmapCollectiveFc.map(
                     FileChannel.MapMode.READ_WRITE, 0L, maxMsgSize*mmapProcsCount));
             mmapCollectiveBytes2 = ByteBufferBytes.wrap(mmapCollectiveFc2.map(
-                    FileChannel.MapMode.READ_WRITE, 0L, maxMsgSize*worldProcsCount));
+                    FileChannel.MapMode.READ_WRITE, 0L, ((long)maxMsgSize)*worldProcsCount));
             mmapCollectiveByteBuffer = mmapCollectiveBytes.sliceAsByteBuffer(mmapCollectiveByteBuffer);
             mmapCollectiveByteBuffer2 = mmapCollectiveBytes2.sliceAsByteBuffer(mmapCollectiveByteBuffer2);
 
