@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
  */
 
 public class OsuBroadcast {
-    public static void main(String[] args) throws MPIException, IOException {
+    public static void main(String[] args) throws MPIException, IOException, InterruptedException {
         int maxMsgSize = 1<<20; // 1MB, i.e. 1024x1024 bytes
         int largeMsgSize = 8192;
         int skip = 200;
@@ -70,6 +70,9 @@ public class OsuBroadcast {
             double tStart, tStop;
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
+                // TODO - debugs
+                ParallelOps.worldProcsComm.barrier();
+
                 tStart = MPI.wtime();
                 if (!isMmap) {
                     ParallelOps.worldProcsComm.bcast(sbuff, numBytes, MPI.BYTE, 2);

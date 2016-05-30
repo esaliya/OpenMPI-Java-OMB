@@ -8,6 +8,7 @@ import net.openhft.lang.io.Bytes;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.IntBuffer;
@@ -51,18 +52,22 @@ public class ParallelOps {
     public static Intracomm cgProcComm;
     public static int cgProcRank;
     public static int cgProcsCount;
-    public static int[] cgProcsMmapRowCounts;
-    public static int[] cgProcsMmapXByteExtents;
-    public static int[] cgProcsMmapXDisplas;
 
     public static String mmapCollectiveFileName;
     public static String mmapCollectiveFileName2;
+    public static String mmapLockFileNameOne;
+    public static String mmapLockFileNameTwo;
+    public static Bytes mmapLockOne;
+    public static Bytes mmapLockTwo;
     public static Bytes mmapCollectiveBytes;
     public static Bytes mmapCollectiveBytes2;
     public static ByteBuffer mmapCollectiveByteBuffer;
     public static ByteBuffer mmapCollectiveByteBuffer2;
 
     private static IntBuffer intBuffer;
+
+    private static int LOCK = 0;
+    private static int FLAG = Long.BYTES;
 
     public static void setupParallelism(String[] args, int maxMsgSize, String mmapDir) throws MPIException, IOException {
         MPI.Init(args);
@@ -130,6 +135,7 @@ public class ParallelOps {
         /* Allocate memory maps for collective communications like AllReduce and Broadcast */
         mmapCollectiveFileName = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective.bin";
         mmapCollectiveFileName2 = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective2.bin";
+        mmapLockFileNameOne = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapLockOne.bin";
         try (FileChannel mmapCollectiveFc = FileChannel
                 .open(Paths.get(mmapScratchDir, mmapCollectiveFileName),
                         StandardOpenOption.CREATE, StandardOpenOption.READ,
@@ -151,6 +157,20 @@ public class ParallelOps {
                     mmapCollectiveBytes.writeByte(i, 0);
                     mmapCollectiveBytes2.writeByte(i, 0);
                 }
+            }
+
+            File lockFile = new File(mmapScratchDir, mmapLockFileNameOne);
+            FileChannel fc = new RandomAccessFile(lockFile, "rw").getChannel();
+            mmapLockOne = ByteBufferBytes.wrap(fc.map(FileChannel.MapMode.READ_WRITE, 0, 64));
+            if (isMmapLead){
+                mmapLockOne.writeBoolean(FLAG, false);
+            }
+
+            lockFile = new File(mmapScratchDir, mmapLockFileNameTwo);
+            fc = new RandomAccessFile(lockFile, "rw").getChannel();
+            mmapLockTwo = ByteBufferBytes.wrap(fc.map(FileChannel.MapMode.READ_WRITE, 0, 64));
+            if (isMmapLead){
+                mmapLockTwo.writeBoolean(FLAG, false);
             }
         }
     }
@@ -215,7 +235,7 @@ public class ParallelOps {
         return new int[]{q,r};
     }
 
-    public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException {
+    public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException {
         int mmapLeaderCgProcCommRankOfRoot = 0;
         if (isMmapLead){
             // Let's find the cgProcComm rank of root's mmap leader
@@ -231,14 +251,35 @@ public class ParallelOps {
             for (int i = 0; i < length; ++i) {
                 mmapCollectiveBytes.writeByte(i, buffer.get(i));
             }
+            mmapLockOne.busyLockLong(LOCK);
+            mmapLockOne.writeBoolean(FLAG, true);
+            mmapLockOne.unlockLong(LOCK);
         }
-        worldProcsComm.barrier();
+        /*worldProcsComm.barrier();*/
 
         if (ParallelOps.isMmapLead){
+            if (mmapLeaderCgProcCommRankOfRoot == cgProcRank){
+                boolean ready = false;
+                while (!ready){
+                    mmapLockOne.busyLockLong(LOCK);
+                    ready = mmapLockOne.readBoolean(FLAG);
+                    if (ready){
+                        mmapLockOne.writeBoolean(FLAG, false);
+                    }
+                }
+            }
             cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, mmapLeaderCgProcCommRankOfRoot);
+            mmapLockTwo.busyLockLong(LOCK);
+            mmapLockTwo.writeBoolean(FLAG, true);
+        } else {
+            boolean ready = false;
+            while (!ready){
+                mmapLockTwo.busyLockLong(LOCK);
+                ready = mmapLockTwo.readBoolean(FLAG);
+            }
         }
 
-        worldProcsComm.barrier();
+        /*worldProcsComm.barrier();*/
 
         if (root != worldProcRank){
             for (int i = 0; i < length; ++i){
