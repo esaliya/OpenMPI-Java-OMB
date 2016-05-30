@@ -68,6 +68,7 @@ public class ParallelOps {
 
     private static int LOCK = 0;
     private static int FLAG = Long.BYTES;
+    private static int COUNT = 2*Long.BYTES;
 
     public static void setupParallelism(String[] args, int maxMsgSize, String mmapDir) throws MPIException, IOException {
         MPI.Init(args);
@@ -172,6 +173,7 @@ public class ParallelOps {
             mmapLockTwo = ByteBufferBytes.wrap(fc.map(FileChannel.MapMode.READ_WRITE, 0, 64));
             if (isMmapLead){
                 mmapLockTwo.writeBoolean(FLAG, false);
+                mmapLockTwo.writeLong(COUNT, 0);
             }
         }
     }
@@ -273,12 +275,17 @@ public class ParallelOps {
             cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, mmapLeaderCgProcCommRankOfRoot);
             mmapLockTwo.busyLockLong(LOCK);
             mmapLockTwo.writeBoolean(FLAG, true);
+            mmapLockTwo.addAndGetInt(COUNT, 1);
             mmapLockTwo.unlockLong(LOCK);
         } else {
             boolean ready = false;
             while (!ready){
                 mmapLockTwo.busyLockLong(LOCK);
                 ready = mmapLockTwo.readBoolean(FLAG);
+                long count = mmapLockTwo.addAndGetInt(COUNT, 1);
+                if (count == mmapProcsCount){
+                    mmapLockTwo.writeBoolean(FLAG, false);
+                }
                 mmapLockTwo.unlockLong(LOCK);
             }
         }
@@ -289,12 +296,6 @@ public class ParallelOps {
             for (int i = 0; i < length; ++i){
                 buffer.put(i,mmapCollectiveBytes.readByte(i));
             }
-        }
-
-        if (isMmapLead){
-            mmapLockTwo.busyLockLong(LOCK);
-            mmapLockTwo.writeBoolean(FLAG, false);
-            mmapLockTwo.unlockLong(LOCK);
         }
     }
 
