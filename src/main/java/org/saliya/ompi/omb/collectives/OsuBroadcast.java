@@ -72,6 +72,16 @@ public class OsuBroadcast {
                 if (i >= skip){
                     timer += tStop - tStart;
                 }
+
+                // TODO - debugs
+                if (ParallelOps.worldProcRank == 33){
+                    StringBuilder sb = new StringBuilder();
+                    for (int j = 0; j < byteBytes; ++j){
+                        sb.append(sbuff.get(i)).append(' ');
+                    }
+                    System.out.println(sb.toString());
+                }
+
                 ParallelOps.worldProcsComm.barrier();
             }
             double latency = (timer *1e6)/iterations;
