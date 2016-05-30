@@ -49,7 +49,7 @@ public class OsuBroadcast {
         double [] vbuff = new double[1];
         for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
-                sbuff.put(i,((byte)(((byte)'a')%26)));
+                sbuff.put(i,((byte)'a'));
             }
 
             if (numBytes > largeMsgSize){
