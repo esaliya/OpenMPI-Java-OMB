@@ -73,13 +73,15 @@ public class OsuBroadcast {
                     timer += tStop - tStart;
                 }
 
-                // TODO - debugs
-                if (ParallelOps.worldProcRank == 33){
-                    StringBuilder sb = new StringBuilder();
-                    for (int j = 0; j < byteBytes; ++j){
-                        sb.append(sbuff.get(i)).append(' ');
+                if (numBytes == 8) {
+                    // TODO - debugs
+                    if (ParallelOps.worldProcRank == 33) {
+                        StringBuilder sb = new StringBuilder();
+                        for (int j = 0; j < byteBytes; ++j) {
+                            sb.append(sbuff.get(i)).append(' ');
+                        }
+                        System.out.println(sb.toString());
                     }
-                    System.out.println(sb.toString());
                 }
 
                 ParallelOps.worldProcsComm.barrier();
