@@ -86,9 +86,15 @@ public class OsuBroadcast {
                     if (ParallelOps.worldProcRank == 33) {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes; ++j) {
-                            sb.append((char)sbuff.get(i)).append(' ');
+                            char c = (char) sbuff.get(i);
+                            if (c != 'b'){
+                                System.out.println("Error in allgather ");
+                                break;
+                            }
+                            /*sb.append((char)sbuff.get(i)).append(' ');*/
                         }
-                        System.out.println(sb.toString());
+                        /*System.out.println(sb.toString());*/
+                        System.out.println("All good");
                     }
                     stop = true;
                     break;
