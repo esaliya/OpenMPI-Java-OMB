@@ -81,8 +81,8 @@ public class OsuBroadcast {
                     timer += tStop - tStart;
                 }
 
+                // TODO - debugs
                 if (numBytes == 8) {
-                    // TODO - debugs
                     if (ParallelOps.worldProcRank == 33) {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes; ++j) {
