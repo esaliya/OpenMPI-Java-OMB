@@ -267,16 +267,19 @@ public class ParallelOps {
                     if (ready){
                         mmapLockOne.writeBoolean(FLAG, false);
                     }
+                    mmapLockOne.unlockLong(LOCK);
                 }
             }
             cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, mmapLeaderCgProcCommRankOfRoot);
             mmapLockTwo.busyLockLong(LOCK);
             mmapLockTwo.writeBoolean(FLAG, true);
+            mmapLockTwo.unlockLong(LOCK);
         } else {
             boolean ready = false;
             while (!ready){
                 mmapLockTwo.busyLockLong(LOCK);
                 ready = mmapLockTwo.readBoolean(FLAG);
+                mmapLockTwo.unlockLong(LOCK);
             }
         }
 
@@ -286,6 +289,12 @@ public class ParallelOps {
             for (int i = 0; i < length; ++i){
                 buffer.put(i,mmapCollectiveBytes.readByte(i));
             }
+        }
+
+        if (isMmapLead){
+            mmapLockTwo.busyLockLong(LOCK);
+            mmapLockTwo.writeBoolean(FLAG, false);
+            mmapLockTwo.unlockLong(LOCK);
         }
     }
 
