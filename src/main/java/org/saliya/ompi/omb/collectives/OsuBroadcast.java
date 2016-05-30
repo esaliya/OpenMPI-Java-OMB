@@ -46,6 +46,8 @@ public class OsuBroadcast {
             System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
         }
 
+        // TODO - debugs
+        boolean stop = false;
         double [] vbuff = new double[1];
         for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
@@ -82,11 +84,13 @@ public class OsuBroadcast {
                         }
                         System.out.println(sb.toString());
                     }
-                    return;
+                    stop = true;
                 }
 
                 ParallelOps.worldProcsComm.barrier();
             }
+            if (stop) break;
+
             double latency = (timer *1e6)/iterations;
             vbuff[0] = latency;
             ParallelOps.worldProcsComm.reduce(vbuff,1,MPI.DOUBLE,MPI.MIN,0);
