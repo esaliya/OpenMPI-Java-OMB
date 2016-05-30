@@ -136,6 +136,7 @@ public class ParallelOps {
         mmapCollectiveFileName = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective.bin";
         mmapCollectiveFileName2 = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective2.bin";
         mmapLockFileNameOne = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapLockOne.bin";
+        mmapLockFileNameTwo = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapLockTwo.bin";
         try (FileChannel mmapCollectiveFc = FileChannel
                 .open(Paths.get(mmapScratchDir, mmapCollectiveFileName),
                         StandardOpenOption.CREATE, StandardOpenOption.READ,
