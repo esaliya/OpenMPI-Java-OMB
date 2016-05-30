@@ -82,7 +82,7 @@ public class OsuBroadcast {
                 }
 
                 // TODO - debugs
-                if (numBytes == 8) {
+                if (numBytes == maxMsgSize) {
                     if (ParallelOps.worldProcRank == 33) {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes; ++j) {
