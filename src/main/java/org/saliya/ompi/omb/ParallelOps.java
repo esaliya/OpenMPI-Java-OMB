@@ -6,6 +6,7 @@ import mpi.MPIException;
 import net.openhft.lang.io.ByteBufferBytes;
 import net.openhft.lang.io.Bytes;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -125,6 +126,7 @@ public class ParallelOps {
         cgProcRank = cgProcComm.getRank();
         cgProcsCount = cgProcComm.getSize();
 
+        boolean status = new File(mmapScratchDir).mkdirs();
         /* Allocate memory maps for collective communications like AllReduce and Broadcast */
         mmapCollectiveFileName = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective.bin";
         mmapCollectiveFileName2 = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective2.bin";
