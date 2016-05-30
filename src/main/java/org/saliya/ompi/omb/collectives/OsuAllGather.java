@@ -34,32 +34,37 @@ public class OsuAllGather {
         ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
         Boolean isMmap = Boolean.parseBoolean(args[3]);
 
-        Intracomm comm = MPI.COMM_WORLD;
-        int rank = comm.getRank();
-        int numProcs = comm.getSize();
 
         int byteBytes = maxMsgSize;
         ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
-        ByteBuffer rbuff = MPI.newByteBuffer(byteBytes * numProcs);
+        ByteBuffer rbuff = MPI.newByteBuffer(byteBytes * ParallelOps.worldProcsCount);
 
-        String msg = "Rank " + rank + " is on " + MPI.getProcessorName() + "\n";
-        msg = MpiOps.allReduceStr(msg, comm);
-        if (rank == 0){
+        String msg = "Rank " + ParallelOps.worldProcRank + " is on " + MPI.getProcessorName() + "\n";
+        msg = MpiOps.allReduceStr(msg, ParallelOps.worldProcsComm);
+        if (ParallelOps.worldProcRank == 0){
             System.out.println(msg);
             System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
         }
 
+        // TODO - debugs
+        boolean stop = false;
         double [] vbuff = new double[1];
         for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
-                sbuff.put(i,(byte)'a');
+                /*sbuff.put(i,((byte)'a'));*/
+                // TODO - debugs
+                if (ParallelOps.worldProcRank == 0){
+                    sbuff.put(i,((byte)'b'));
+                } else {
+                    sbuff.put(i,((byte)'z'));
+                }
             }
 
             if (numBytes > largeMsgSize){
                 skip = skipLarge;
                 iterations = iterationsLarge;
             }
-            comm.barrier();
+            ParallelOps.worldProcsComm.barrier();
 
             double timer = 0.0;
             double tStart, tStop;
@@ -67,7 +72,7 @@ public class OsuAllGather {
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
                 if (!isMmap) {
-                    comm.allGather(sbuff, numBytes, MPI.BYTE, rbuff, numBytes, MPI.BYTE);
+                    ParallelOps.worldProcsComm.allGather(sbuff, numBytes, MPI.BYTE, rbuff, numBytes, MPI.BYTE);
                 } else {
                     ParallelOps.allGather(sbuff, numBytes, rbuff);
                 }
@@ -75,22 +80,39 @@ public class OsuAllGather {
                 if (i >= skip){
                     timer += tStop - tStart;
                 }
-                comm.barrier();
+
+                // TODO - debugs
+                if (numBytes == 8) {
+                    if (ParallelOps.worldProcRank == 33) {
+                        StringBuilder sb = new StringBuilder();
+                        for (int j = 0; j < numBytes*ParallelOps.worldProcsCount; ++j) {
+                            sb.append((char)rbuff.get(i)).append(' ');
+                        }
+                        System.out.println(sb.toString());
+                    }
+                    stop = true;
+                    break;
+                }
+
+                ParallelOps.worldProcsComm.barrier();
             }
+            // TODO - debugs
+            if (stop) break;
+
             double latency = (timer *1e6)/iterations;
             vbuff[0] = latency;
-            comm.reduce(vbuff,1,MPI.DOUBLE,MPI.MIN,0);
+            ParallelOps.worldProcsComm.reduce(vbuff,1,MPI.DOUBLE,MPI.MIN,0);
             minLatency = vbuff[0];
             vbuff[0] = latency;
-            comm.reduce(vbuff,1,MPI.DOUBLE,MPI.MAX,0);
+            ParallelOps.worldProcsComm.reduce(vbuff,1,MPI.DOUBLE,MPI.MAX,0);
             maxLatency = vbuff[0];
             vbuff[0] = latency;
-            comm.reduce(vbuff,1,MPI.DOUBLE,MPI.SUM,0);
-            avgLatency = vbuff[0] / numProcs;
-            if (rank == 0){
+            ParallelOps.worldProcsComm.reduce(vbuff,1,MPI.DOUBLE,MPI.SUM,0);
+            avgLatency = vbuff[0] / ParallelOps.worldProcsCount;
+            if (ParallelOps.worldProcRank == 0){
                 System.out.println(numBytes + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
             }
-            comm.barrier();
+            ParallelOps.worldProcsComm.barrier();
         }
 
         ParallelOps.endParallelism();
