@@ -82,6 +82,7 @@ public class OsuBroadcast {
                         }
                         System.out.println(sb.toString());
                     }
+                    return;
                 }
 
                 ParallelOps.worldProcsComm.barrier();
