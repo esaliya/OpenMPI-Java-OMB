@@ -15,12 +15,6 @@ import java.nio.ByteBuffer;
  */
 public class OsuAllGather {
     public static void main(String[] args) throws MPIException, IOException {
-        MPI.Init(args);
-
-        Intracomm comm = MPI.COMM_WORLD;
-        int rank = comm.getRank();
-        int numProcs = comm.getSize();
-
         int maxMsgSize = 1<<20; // 1MB, i.e. 1024x1024 bytes
         int largeMsgSize = 8192;
         int skip = 200;
@@ -39,6 +33,10 @@ public class OsuAllGather {
         String mmapDir = args[2];
         ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
         Boolean isMmap = Boolean.parseBoolean(args[3]);
+
+        Intracomm comm = MPI.COMM_WORLD;
+        int rank = comm.getRank();
+        int numProcs = comm.getSize();
 
         int byteBytes = maxMsgSize;
         ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
