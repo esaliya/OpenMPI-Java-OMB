@@ -53,7 +53,7 @@ public class OsuBroadcast {
             for (int i = 0; i < byteBytes; ++i){
                 /*sbuff.put(i,((byte)'a'));*/
                 // TODO - debugs
-                if (ParallelOps.worldProcRank == 0){
+                if (ParallelOps.worldProcRank == 2){
                     sbuff.put(i,((byte)'b'));
                 } else {
                     sbuff.put(i,((byte)'z'));
@@ -72,9 +72,9 @@ public class OsuBroadcast {
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
                 if (!isMmap) {
-                    ParallelOps.worldProcsComm.bcast(sbuff, numBytes, MPI.BYTE, 0);
+                    ParallelOps.worldProcsComm.bcast(sbuff, numBytes, MPI.BYTE, 2);
                 } else {
-                    ParallelOps.broadcast(sbuff, numBytes, 0);
+                    ParallelOps.broadcast(sbuff, numBytes, 2);
                 }
                 tStop = MPI.wtime();
                 if (i >= skip){
