@@ -72,9 +72,9 @@ public class OsuBroadcast {
             for (int i = 0; i < iterations + skip; ++i){
                 tStart = MPI.wtime();
                 if (!isMmap) {
-//                    ParallelOps.worldProcsComm.bcast(sbuff, numBytes, MPI.BYTE, 0);
+                    ParallelOps.worldProcsComm.bcast(sbuff, numBytes, MPI.BYTE, 0);
                 } else {
-//                    ParallelOps.broadcast(sbuff, numBytes, 0);
+                    ParallelOps.broadcast(sbuff, numBytes, 0);
                 }
                 tStop = MPI.wtime();
                 if (i >= skip){
