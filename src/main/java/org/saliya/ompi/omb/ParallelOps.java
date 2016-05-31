@@ -295,17 +295,7 @@ public class ParallelOps {
     }
 
     public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException {
-        int mmapLeaderCgProcCommRankOfRoot = 0;
-        if (isMmapLead){
-            // Let's find the cgProcComm rank of root's mmap leader
-            mmapLeaderCgProcCommRankOfRoot = isRankWithinMmap(root) ? cgProcRank : 0;
-            intBuffer.put(0, mmapLeaderCgProcCommRankOfRoot);
-            cgProcComm.allReduce(intBuffer, 1, MPI.INT, MPI.SUM);
-            mmapLeaderCgProcCommRankOfRoot = intBuffer.get(0);
-        }
-
-        // TODO - debugs
-        System.out.println("I am mmapLead " + isMmapLead  + " Rank: " + worldProcRank + " bcastfrom worldRank " + root  + " CGProcRank " + mmapLeaderCgProcCommRankOfRoot + " == " + cgProcCommRankOfMmapLeaderForRank.get(root));
+        int cgProcRankOfMmapLeaderForRoot = cgProcCommRankOfMmapLeaderForRank.get(root);
 
         if (root == worldProcRank){
             mmapCollectiveBytes.position(0);
@@ -319,7 +309,7 @@ public class ParallelOps {
         }
 
         if (ParallelOps.isMmapLead){
-            if (mmapLeaderCgProcCommRankOfRoot == cgProcRank){
+            if (cgProcRankOfMmapLeaderForRoot == cgProcRank){
                 boolean ready = false;
                 while (!ready){
                     mmapLockOne.busyLockLong(LOCK);
@@ -330,7 +320,7 @@ public class ParallelOps {
                     mmapLockOne.unlockLong(LOCK);
                 }
             }
-            cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, mmapLeaderCgProcCommRankOfRoot);
+            cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
             mmapLockTwo.busyLockLong(LOCK);
             mmapLockTwo.addAndGetInt(COUNT, 1);
             mmapLockTwo.writeBoolean(FLAG, true);
