@@ -305,7 +305,7 @@ public class ParallelOps {
         }
 
         // TODO - debugs
-        System.out.println("Rank: " + worldProcRank + " bcastfrom worldRank " + root  + " CGProcRank " + mmapLeaderCgProcCommRankOfRoot + " == " + cgProcCommRankOfMmapLeaderForRank.get(root));
+        System.out.println("I am mmapLead " + isMmapLead  + " Rank: " + worldProcRank + " bcastfrom worldRank " + root  + " CGProcRank " + mmapLeaderCgProcCommRankOfRoot + " == " + cgProcCommRankOfMmapLeaderForRank.get(root));
 
         if (root == worldProcRank){
             mmapCollectiveBytes.position(0);
