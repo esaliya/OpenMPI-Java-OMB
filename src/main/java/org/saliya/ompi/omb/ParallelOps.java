@@ -388,6 +388,7 @@ public class ParallelOps {
 
         if (root != worldProcRank){
             mmapCollectiveBytes.position(0);
+            buffer.position(0);
             mmapCollectiveBytes.read(buffer, length);
             /*for (int i = 0; i < length; ++i){
                 buffer.put(i,mmapCollectiveBytes.readByte(i));
