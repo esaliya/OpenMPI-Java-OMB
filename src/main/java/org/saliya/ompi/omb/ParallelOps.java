@@ -285,6 +285,7 @@ public class ParallelOps {
                 long count = mmapLockTwo.addAndGetInt(COUNT, 1);
                 if (count == mmapProcsCount){
                     mmapLockTwo.writeBoolean(FLAG, false);
+                    mmapLockTwo.writeInt(COUNT, 0);
                 }
                 mmapLockTwo.unlockLong(LOCK);
             }
