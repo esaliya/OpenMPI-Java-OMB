@@ -310,7 +310,7 @@ public class ParallelOps {
             }
             mmapLockOne.busyLockLong(LOCK);
             mmapLockOne.writeBoolean(FLAG, true);
-            mmapLockOne.addAndGetInt(COUNT, 1);
+            mmapLockOne.writeInt(COUNT, 1);
             mmapLockOne.unlockLong(LOCK);
 
             if (!isMmapLead) return;
@@ -325,7 +325,9 @@ public class ParallelOps {
                 mmapLockOne.busyLockLong(LOCK);
                 ready = mmapLockOne.readBoolean(FLAG);
                 if (ready) {
-                    count = mmapLockOne.addAndGetInt(COUNT, 1);
+                    count = mmapLockOne.readInt(COUNT);
+                    ++count;
+                    mmapLockOne.writeInt(COUNT, count);
                     if (count == mmapProcsCount && worldProcsCount == mmapProcsCount){
                         mmapLockOne.writeBoolean(FLAG, false);
                         mmapLockOne.writeInt(COUNT, 0);
@@ -342,7 +344,9 @@ public class ParallelOps {
                         mmapLockOne.busyLockLong(LOCK);
                         ready = mmapLockOne.readBoolean(FLAG);
                         if (ready) {
-                            count = mmapLockOne.addAndGetInt(COUNT, 1);
+                            count = mmapLockOne.readInt(COUNT);
+                            ++count;
+                            mmapLockOne.writeInt(COUNT, count);
                             if (count == mmapProcsCount) {
                                 mmapLockOne.writeBoolean(FLAG, false);
                                 mmapLockOne.writeInt(COUNT, 0);
@@ -365,7 +369,9 @@ public class ParallelOps {
                     mmapLockTwo.busyLockLong(LOCK);
                     ready = mmapLockTwo.readBoolean(FLAG);
                     if (ready) {
-                        count = mmapLockTwo.addAndGetInt(COUNT, 1);
+                        count = mmapLockTwo.readInt(COUNT);
+                        ++count;
+                        mmapLockTwo.writeInt(COUNT, count);
                         if (count == mmapProcsCount) {
                             mmapLockTwo.writeBoolean(FLAG, false);
                             mmapLockTwo.writeInt(COUNT, 0);
