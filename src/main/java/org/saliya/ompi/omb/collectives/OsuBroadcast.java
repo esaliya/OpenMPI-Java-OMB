@@ -40,10 +40,10 @@ public class OsuBroadcast {
         ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
 
         String msg = "Rank " + ParallelOps.worldProcRank + " is on " + MPI.getProcessorName() + "\n";
-        msg = MpiOps.allReduceStr(msg, ParallelOps.worldProcsComm);
+        //msg = MpiOps.allReduceStr(msg, ParallelOps.worldProcsComm);
         if (ParallelOps.worldProcRank == 0){
             System.out.println(msg);
-            System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
+            //System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
         }
 
         // TODO - debugs
