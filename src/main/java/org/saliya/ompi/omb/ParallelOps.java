@@ -389,13 +389,18 @@ public class ParallelOps {
         }
     }
 
-    public static void broadCastCleanup() throws MPIException {
+    public static void broadCastCleanup() throws MPIException, InterruptedException {
         worldProcsComm.barrier();
         if (isMmapLead){
+            mmapLockOne.busyLockLong(LOCK);
             mmapLockOne.writeBoolean(FLAG, false);
             mmapLockOne.writeInt(COUNT, 0);
+            mmapLockOne.unlockLong(LOCK);
+
+            mmapLockTwo.busyLockLong(LOCK);
             mmapLockTwo.writeBoolean(FLAG, false);
             mmapLockTwo.writeInt(COUNT, 0);
+            mmapLockTwo.unlockLong(LOCK);
         }
     }
 
