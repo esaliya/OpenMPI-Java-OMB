@@ -64,11 +64,18 @@ public class ParallelOps {
     public static ByteBuffer mmapCollectiveByteBuffer;
     public static ByteBuffer mmapCollectiveByteBuffer2;
 
+    public static Bytes mmapWriteBytes;
+    public static Bytes mmapReadBytes;
+    public static ByteBuffer mmapWriteByteBuffer;
+    public static ByteBuffer mmapReadByteBuffer;
+
     private static IntBuffer intBuffer;
 
     private static int LOCK = 0;
     private static int FLAG = Long.BYTES;
     private static int COUNT = 2*Long.BYTES;
+
+    private static HashMap<Integer, Integer> cgProcCommRankOfMmapLeaderForRank;
 
     public static void setupParallelism(String[] args, int maxMsgSize, String mmapDir) throws MPIException, IOException {
         MPI.Init(args);
@@ -176,10 +183,59 @@ public class ParallelOps {
                 mmapLockTwo.writeLong(COUNT, 0);
             }
         }
+
+        cgProcCommRankOfMmapLeaderForRank = new HashMap<>(worldProcsCount);
+        String mmapWriteFileName = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapWrite.bin";
+        String mmapReadFileName = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapRead.bin";
+        try (FileChannel mmapWriteFc = FileChannel
+                .open(Paths.get(mmapScratchDir, mmapWriteFileName),
+                        StandardOpenOption.CREATE, StandardOpenOption.READ,
+                        StandardOpenOption.WRITE);
+             FileChannel mmapReadFc = FileChannel
+                     .open(Paths.get(mmapScratchDir, mmapReadFileName),
+                             StandardOpenOption.CREATE, StandardOpenOption.READ,
+                             StandardOpenOption.WRITE)) {
+
+            mmapWriteBytes = ByteBufferBytes.wrap(mmapWriteFc.map(FileChannel.MapMode.READ_WRITE, 0L, 3 * Integer.BYTES));
+            mmapReadBytes = ByteBufferBytes.wrap(
+                    mmapReadFc.map(FileChannel.MapMode.READ_WRITE, 0L, 3 * worldProcsCount * Integer.BYTES));
+            mmapWriteByteBuffer = mmapWriteBytes.sliceAsByteBuffer(mmapWriteByteBuffer);
+            mmapReadByteBuffer = mmapReadBytes.sliceAsByteBuffer(mmapReadByteBuffer);
+        }
+
+        findCgProcCommRankOfMmapLeadForAllRanks();
     }
 
     public static void endParallelism() throws MPIException {
         MPI.Finalize();
+    }
+
+    private static void findCgProcCommRankOfMmapLeadForAllRanks() throws MPIException {
+        if (isMmapLead){
+            mmapWriteBytes.writeInt(0, cgProcRank);
+            mmapWriteBytes.writeInt(Integer.BYTES, worldProcRank);
+        }
+        if (isMmapTail){
+            mmapWriteBytes.writeInt(2*Integer.BYTES, worldProcRank);
+        }
+        worldProcsComm.barrier();
+        if(isMmapLead){
+            cgProcComm.allGather(mmapWriteByteBuffer, 3, MPI.INT, mmapReadByteBuffer, 3, MPI.INT);
+        }
+        worldProcsComm.barrier();
+        int cgr;
+        int fromWorldRank, toWorldRank;
+        int offset;
+        for (int i = 0; i < worldProcsCount; ++i){
+            offset = 3*i*Integer.BYTES;
+            cgr = mmapReadBytes.readInt(offset);
+            fromWorldRank = mmapReadBytes.readInt(offset+Integer.BYTES);
+            toWorldRank = mmapReadBytes.readInt(offset+2*Integer.BYTES);
+            for (int j = fromWorldRank; j <=toWorldRank; ++j){
+                cgProcCommRankOfMmapLeaderForRank.put(j, cgr);
+            }
+        }
+
     }
 
     private static int[] findQandR() throws MPIException {
@@ -247,6 +303,9 @@ public class ParallelOps {
             cgProcComm.allReduce(intBuffer, 1, MPI.INT, MPI.SUM);
             mmapLeaderCgProcCommRankOfRoot = intBuffer.get(0);
         }
+
+        // TODO - debugs
+        System.out.println("Rank: " + worldProcRank + " bcastfrom CGProcRank " + mmapLeaderCgProcCommRankOfRoot + " == " + cgProcCommRankOfMmapLeaderForRank.get(root));
 
         if (root == worldProcRank){
             mmapCollectiveBytes.position(0);
