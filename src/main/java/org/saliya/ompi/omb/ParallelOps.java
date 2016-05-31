@@ -394,6 +394,8 @@ public class ParallelOps {
         if (isMmapLead){
             mmapLockOne.writeBoolean(FLAG, false);
             mmapLockOne.writeInt(COUNT, 0);
+            mmapLockTwo.writeBoolean(FLAG, false);
+            mmapLockTwo.writeInt(COUNT, 0);
         }
     }
 
