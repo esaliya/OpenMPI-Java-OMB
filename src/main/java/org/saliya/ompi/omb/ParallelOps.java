@@ -291,7 +291,7 @@ public class ParallelOps {
             }
         }
 
-        /*worldProcsComm.barrier();*/
+        worldProcsComm.barrier();
 
         if (root != worldProcRank){
             for (int i = 0; i < length; ++i){
