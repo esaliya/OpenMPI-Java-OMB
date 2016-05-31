@@ -71,7 +71,7 @@ public class OsuBroadcast {
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
                 // TODO - debugs
-                ParallelOps.worldProcsComm.barrier();
+                /*ParallelOps.worldProcsComm.barrier();*/
 
                 tStart = MPI.wtime();
                 if (!isMmap) {
@@ -85,7 +85,7 @@ public class OsuBroadcast {
                 }
 
                 // TODO - debugs
-                /*if (numBytes == maxMsgSize) {
+                if (numBytes == maxMsgSize) {
                     if (ParallelOps.worldProcRank == 33) {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes; ++j) {
@@ -94,14 +94,14 @@ public class OsuBroadcast {
                                 System.out.println("Error in allgather ");
                                 break;
                             }
-                            *//*sb.append((char)sbuff.get(i)).append(' ');*//*
+                            sb.append((char)sbuff.get(i)).append(' ');
                         }
-                        *//*System.out.println(sb.toString());*//*
+                        System.out.println(sb.toString());
                         System.out.println("All good");
                     }
                     stop = true;
                     break;
-                }*/
+                }
 
                 ParallelOps.worldProcsComm.barrier();
             }
