@@ -308,10 +308,10 @@ public class ParallelOps {
             for (int i = 0; i < length; ++i) {
                 mmapCollectiveBytes.writeByte(i, buffer.get(i));
             }
-            mmapLockOne.busyLockLong(LOCK);
+//            mmapLockOne.busyLockLong(LOCK);
             mmapLockOne.writeBoolean(FLAG, true);
             /*mmapLockOne.writeInt(COUNT, 1);*/
-            mmapLockOne.unlockLong(LOCK);
+//            mmapLockOne.unlockLong(LOCK);
 
             if (!isMmapLead) return;
         }
@@ -322,7 +322,7 @@ public class ParallelOps {
             boolean ready = false;
             int count;
             while (!ready){
-                mmapLockOne.busyLockLong(LOCK);
+//                mmapLockOne.busyLockLong(LOCK);
                 ready = mmapLockOne.readBoolean(FLAG);
                 /*if (ready) {
                     count = mmapLockOne.readInt(COUNT);
@@ -333,7 +333,7 @@ public class ParallelOps {
                         mmapLockOne.writeInt(COUNT, 0);
                     }
                 }*/
-                mmapLockOne.unlockLong(LOCK);
+//                mmapLockOne.unlockLong(LOCK);
             }
         } else {
 //            if (ParallelOps.isMmapLead) {
