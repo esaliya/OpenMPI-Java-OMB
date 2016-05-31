@@ -258,7 +258,6 @@ public class ParallelOps {
             mmapLockOne.writeBoolean(FLAG, true);
             mmapLockOne.unlockLong(LOCK);
         }
-        /*worldProcsComm.barrier();*/
 
         if (ParallelOps.isMmapLead){
             if (mmapLeaderCgProcCommRankOfRoot == cgProcRank){
@@ -292,8 +291,6 @@ public class ParallelOps {
                 mmapLockTwo.unlockLong(LOCK);
             }
         }
-
-        /*worldProcsComm.barrier();*/
 
         if (root != worldProcRank){
             for (int i = 0; i < length; ++i){

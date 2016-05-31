@@ -87,17 +87,21 @@ public class OsuBroadcast {
                 // TODO - debugs
                 if (numBytes == maxMsgSize) {
                     if (ParallelOps.worldProcRank == 33) {
+                        boolean error = false;
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes; ++j) {
                             char c = (char) sbuff.get(i);
                             if (c != 'b'){
                                 System.out.println("Error in allgather ");
+                                error = true;
                                 break;
                             }
                             /*sb.append((char)sbuff.get(i)).append(' ');*/
                         }
                         /*System.out.println(sb.toString());*/
-                        System.out.println("All good");
+                        if (!error) {
+                            System.out.println("All good");
+                        }
                     }
                     stop = true;
                     break;
