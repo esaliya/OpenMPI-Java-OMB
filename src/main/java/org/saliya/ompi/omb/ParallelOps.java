@@ -402,6 +402,7 @@ public class ParallelOps {
             mmapLockTwo.writeInt(COUNT, 0);
             mmapLockTwo.unlockLong(LOCK);
         }
+        worldProcsComm.barrier();
     }
 
     private static boolean isRankWithinMmap(int rank){
