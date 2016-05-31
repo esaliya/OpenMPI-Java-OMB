@@ -94,9 +94,9 @@ public class OsuBroadcast {
                                 System.out.println("Error in allgather ");
                                 break;
                             }
-                            sb.append((char)sbuff.get(i)).append(' ');
+                            /*sb.append((char)sbuff.get(i)).append(' ');*/
                         }
-                        System.out.println(sb.toString());
+                        /*System.out.println(sb.toString());*/
                         System.out.println("All good");
                     }
                     stop = true;
