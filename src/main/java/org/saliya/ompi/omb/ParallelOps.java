@@ -173,6 +173,7 @@ public class ParallelOps {
             mmapLockOne = ByteBufferBytes.wrap(fc.map(FileChannel.MapMode.READ_WRITE, 0, 64));
             if (isMmapLead){
                 mmapLockOne.writeBoolean(FLAG, false);
+                mmapLockOne.writeLong(COUNT, 0);
             }
 
             lockFile = new File(mmapScratchDir, mmapLockFileNameTwo);
@@ -295,9 +296,13 @@ public class ParallelOps {
     }
 
     public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException {
-        int cgProcRankOfMmapLeaderForRoot = cgProcCommRankOfMmapLeaderForRank.get(root);
 
+        /* for now let's assume a second invocation of broadcast will NOT happen while some ranks are still
+        *  doing the first invocation. If that happens, current implementation can screw up */
+
+        int cgProcRankOfMmapLeaderForRoot = cgProcCommRankOfMmapLeaderForRank.get(root);
         if (root == worldProcRank){
+            /* I am the root and I've the content, so write to my shared buffer */
             mmapCollectiveBytes.position(0);
             buffer.position(0);
             for (int i = 0; i < length; ++i) {
@@ -305,39 +310,69 @@ public class ParallelOps {
             }
             mmapLockOne.busyLockLong(LOCK);
             mmapLockOne.writeBoolean(FLAG, true);
+            mmapLockOne.addAndGetInt(COUNT, 1);
             mmapLockOne.unlockLong(LOCK);
+
+            if (!isMmapLead) return;
         }
 
-        if (ParallelOps.isMmapLead){
-            if (cgProcRankOfMmapLeaderForRoot == cgProcRank){
-                boolean ready = false;
-                while (!ready){
-                    mmapLockOne.busyLockLong(LOCK);
-                    ready = mmapLockOne.readBoolean(FLAG);
-                    if (ready){
-                        mmapLockOne.writeBoolean(FLAG, false);
-                    }
-                    mmapLockOne.unlockLong(LOCK);
-                }
-            }
-            cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
-            mmapLockTwo.busyLockLong(LOCK);
-            mmapLockTwo.addAndGetInt(COUNT, 1);
-            mmapLockTwo.writeBoolean(FLAG, true);
-            mmapLockTwo.unlockLong(LOCK);
-        } else {
+        if (root != worldProcRank && isRankWithinMmap(root) && !isMmapLead){
+            /* I happen to be within the same mmap as root and I am not an mmaplead,
+            so read from shared buffer if root is done writing to it */
             boolean ready = false;
+            int count;
             while (!ready){
-                mmapLockTwo.busyLockLong(LOCK);
-                ready = mmapLockTwo.readBoolean(FLAG);
+                mmapLockOne.busyLockLong(LOCK);
+                ready = mmapLockOne.readBoolean(FLAG);
                 if (ready) {
-                    int count = mmapLockTwo.addAndGetInt(COUNT, 1);
-                    if (count == mmapProcsCount) {
-                        mmapLockTwo.writeBoolean(FLAG, false);
-                        mmapLockTwo.writeInt(COUNT, 0);
+                    count = mmapLockOne.addAndGetInt(COUNT, 1);
+                    if (count == mmapProcsCount && worldProcsCount == mmapProcsCount){
+                        mmapLockOne.writeBoolean(FLAG, false);
+                        mmapLockOne.writeInt(COUNT, 0);
                     }
                 }
-                mmapLockTwo.unlockLong(LOCK);
+                mmapLockOne.unlockLong(LOCK);
+            }
+        } else {
+            if (ParallelOps.isMmapLead) {
+                if (root == worldProcRank) {
+                    boolean ready = false;
+                    int count;
+                    while (!ready) {
+                        mmapLockOne.busyLockLong(LOCK);
+                        ready = mmapLockOne.readBoolean(FLAG);
+                        if (ready) {
+                            count = mmapLockOne.addAndGetInt(COUNT, 1);
+                            if (count == mmapProcsCount) {
+                                mmapLockOne.writeBoolean(FLAG, false);
+                                mmapLockOne.writeInt(COUNT, 0);
+                            }
+                        }
+                        mmapLockOne.unlockLong(LOCK);
+                    }
+                }
+                cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
+                if (root != worldProcRank) {
+                    mmapLockTwo.busyLockLong(LOCK);
+                    mmapLockTwo.writeInt(COUNT, 1);
+                    mmapLockTwo.writeBoolean(FLAG, true);
+                    mmapLockTwo.unlockLong(LOCK);
+                }
+            } else {
+                boolean ready = false;
+                int count;
+                while (!ready) {
+                    mmapLockTwo.busyLockLong(LOCK);
+                    ready = mmapLockTwo.readBoolean(FLAG);
+                    if (ready) {
+                        count = mmapLockTwo.addAndGetInt(COUNT, 1);
+                        if (count == mmapProcsCount) {
+                            mmapLockTwo.writeBoolean(FLAG, false);
+                            mmapLockTwo.writeInt(COUNT, 0);
+                        }
+                    }
+                    mmapLockTwo.unlockLong(LOCK);
+                }
             }
         }
 
