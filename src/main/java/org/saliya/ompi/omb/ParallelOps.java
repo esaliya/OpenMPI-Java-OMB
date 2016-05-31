@@ -336,50 +336,50 @@ public class ParallelOps {
 //                mmapLockOne.unlockLong(LOCK);
             }
         } else {
-//            if (ParallelOps.isMmapLead) {
-//                if (root == worldProcRank) {
-//                    boolean ready = false;
-//                    int count;
-//                    while (!ready) {
+            if (ParallelOps.isMmapLead) {
+                if (root == worldProcRank) {
+                    boolean ready = false;
+                    int count;
+                    while (!ready) {
 //                        mmapLockOne.busyLockLong(LOCK);
-//                        ready = mmapLockOne.readBoolean(FLAG);
-//                        /*if (ready) {
-//                            count = mmapLockOne.readInt(COUNT);
-//                            ++count;
-//                            mmapLockOne.writeInt(COUNT, count);
-//                            if (count == mmapProcsCount) {
-//                                mmapLockOne.writeBoolean(FLAG, false);
-//                                mmapLockOne.writeInt(COUNT, 0);
-//                            }
-//                        }*/
+                        ready = mmapLockOne.readBoolean(FLAG);
+                        /*if (ready) {
+                            count = mmapLockOne.readInt(COUNT);
+                            ++count;
+                            mmapLockOne.writeInt(COUNT, count);
+                            if (count == mmapProcsCount) {
+                                mmapLockOne.writeBoolean(FLAG, false);
+                                mmapLockOne.writeInt(COUNT, 0);
+                            }
+                        }*/
 //                        mmapLockOne.unlockLong(LOCK);
-//                    }
-//                }
-//                cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
-//                if (root != worldProcRank) {
+                    }
+                }
+                cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
+                if (root != worldProcRank) {
 //                    mmapLockTwo.busyLockLong(LOCK);
-//                    /*mmapLockTwo.writeInt(COUNT, 1);*/
-//                    mmapLockTwo.writeBoolean(FLAG, true);
+                    /*mmapLockTwo.writeInt(COUNT, 1);*/
+                    mmapLockTwo.writeBoolean(FLAG, true);
 //                    mmapLockTwo.unlockLong(LOCK);
-//                }
-//            } else {
-//                boolean ready = false;
-//                int count;
-//                while (!ready) {
+                }
+            } else {
+                boolean ready = false;
+                int count;
+                while (!ready) {
 //                    mmapLockTwo.busyLockLong(LOCK);
-//                    ready = mmapLockTwo.readBoolean(FLAG);
-//                    /*if (ready) {
-//                        count = mmapLockTwo.readInt(COUNT);
-//                        ++count;
-//                        mmapLockTwo.writeInt(COUNT, count);
-//                        if (count == mmapProcsCount) {
-//                            mmapLockTwo.writeBoolean(FLAG, false);
-//                            mmapLockTwo.writeInt(COUNT, 0);
-//                        }
-//                    }*/
+                    ready = mmapLockTwo.readBoolean(FLAG);
+                    /*if (ready) {
+                        count = mmapLockTwo.readInt(COUNT);
+                        ++count;
+                        mmapLockTwo.writeInt(COUNT, count);
+                        if (count == mmapProcsCount) {
+                            mmapLockTwo.writeBoolean(FLAG, false);
+                            mmapLockTwo.writeInt(COUNT, 0);
+                        }
+                    }*/
 //                    mmapLockTwo.unlockLong(LOCK);
-//                }
-//            }
+                }
+            }
         }
 
         if (root != worldProcRank){
