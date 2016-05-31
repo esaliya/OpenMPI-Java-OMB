@@ -310,7 +310,7 @@ public class ParallelOps {
             }
             mmapLockOne.busyLockLong(LOCK);
             mmapLockOne.writeBoolean(FLAG, true);
-            mmapLockOne.writeInt(COUNT, 1);
+            /*mmapLockOne.writeInt(COUNT, 1);*/
             mmapLockOne.unlockLong(LOCK);
 
             if (!isMmapLead) return;
@@ -324,7 +324,7 @@ public class ParallelOps {
             while (!ready){
                 mmapLockOne.busyLockLong(LOCK);
                 ready = mmapLockOne.readBoolean(FLAG);
-                if (ready) {
+                /*if (ready) {
                     count = mmapLockOne.readInt(COUNT);
                     ++count;
                     mmapLockOne.writeInt(COUNT, count);
@@ -332,7 +332,7 @@ public class ParallelOps {
                         mmapLockOne.writeBoolean(FLAG, false);
                         mmapLockOne.writeInt(COUNT, 0);
                     }
-                }
+                }*/
                 mmapLockOne.unlockLong(LOCK);
             }
         } else {
@@ -343,7 +343,7 @@ public class ParallelOps {
                     while (!ready) {
                         mmapLockOne.busyLockLong(LOCK);
                         ready = mmapLockOne.readBoolean(FLAG);
-                        if (ready) {
+                        /*if (ready) {
                             count = mmapLockOne.readInt(COUNT);
                             ++count;
                             mmapLockOne.writeInt(COUNT, count);
@@ -351,14 +351,14 @@ public class ParallelOps {
                                 mmapLockOne.writeBoolean(FLAG, false);
                                 mmapLockOne.writeInt(COUNT, 0);
                             }
-                        }
+                        }*/
                         mmapLockOne.unlockLong(LOCK);
                     }
                 }
                 cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
                 if (root != worldProcRank) {
                     mmapLockTwo.busyLockLong(LOCK);
-                    mmapLockTwo.writeInt(COUNT, 1);
+                    /*mmapLockTwo.writeInt(COUNT, 1);*/
                     mmapLockTwo.writeBoolean(FLAG, true);
                     mmapLockTwo.unlockLong(LOCK);
                 }
@@ -368,7 +368,7 @@ public class ParallelOps {
                 while (!ready) {
                     mmapLockTwo.busyLockLong(LOCK);
                     ready = mmapLockTwo.readBoolean(FLAG);
-                    if (ready) {
+                    /*if (ready) {
                         count = mmapLockTwo.readInt(COUNT);
                         ++count;
                         mmapLockTwo.writeInt(COUNT, count);
@@ -376,7 +376,7 @@ public class ParallelOps {
                             mmapLockTwo.writeBoolean(FLAG, false);
                             mmapLockTwo.writeInt(COUNT, 0);
                         }
-                    }
+                    }*/
                     mmapLockTwo.unlockLong(LOCK);
                 }
             }
@@ -386,6 +386,14 @@ public class ParallelOps {
             for (int i = 0; i < length; ++i){
                 buffer.put(i,mmapCollectiveBytes.readByte(i));
             }
+        }
+    }
+
+    public static void broadCastCleanup() throws MPIException {
+        worldProcsComm.barrier();
+        if (isMmapLead){
+            mmapLockOne.writeBoolean(FLAG, false);
+            mmapLockOne.writeInt(COUNT, 0);
         }
     }
 
