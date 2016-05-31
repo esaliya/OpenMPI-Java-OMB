@@ -309,6 +309,7 @@ public class ParallelOps {
                 mmapCollectiveBytes.writeByte(i, buffer.get(i));
             }
 //            mmapLockOne.busyLockLong(LOCK);
+            mmapLockOne.writeInt(COUNT,1); // order matters as we don't have locks now
             mmapLockOne.writeBoolean(FLAG, true);
             /*mmapLockOne.writeInt(COUNT, 1);*/
 //            mmapLockOne.unlockLong(LOCK);
@@ -324,15 +325,16 @@ public class ParallelOps {
             while (!ready){
 //                mmapLockOne.busyLockLong(LOCK);
                 ready = mmapLockOne.readBoolean(FLAG);
-                /*if (ready) {
-                    count = mmapLockOne.readInt(COUNT);
+                if (ready) {
+                    /*count = mmapLockOne.readInt(COUNT);
                     ++count;
-                    mmapLockOne.writeInt(COUNT, count);
+                    mmapLockOne.writeInt(COUNT, count);*/
+                    count = mmapLockOne.addAndGetInt(COUNT,1);
                     if (count == mmapProcsCount && worldProcsCount == mmapProcsCount){
                         mmapLockOne.writeBoolean(FLAG, false);
                         mmapLockOne.writeInt(COUNT, 0);
                     }
-                }*/
+                }
 //                mmapLockOne.unlockLong(LOCK);
             }
         } else {
@@ -343,22 +345,23 @@ public class ParallelOps {
                     while (!ready) {
 //                        mmapLockOne.busyLockLong(LOCK);
                         ready = mmapLockOne.readBoolean(FLAG);
-                        /*if (ready) {
-                            count = mmapLockOne.readInt(COUNT);
+                        if (ready) {
+                            /*count = mmapLockOne.readInt(COUNT);
                             ++count;
-                            mmapLockOne.writeInt(COUNT, count);
+                            mmapLockOne.writeInt(COUNT, count);*/
+                            count = mmapLockOne.addAndGetInt(COUNT, 1);
                             if (count == mmapProcsCount) {
                                 mmapLockOne.writeBoolean(FLAG, false);
                                 mmapLockOne.writeInt(COUNT, 0);
                             }
-                        }*/
+                        }
 //                        mmapLockOne.unlockLong(LOCK);
                     }
                 }
                 cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
                 if (root != worldProcRank) {
 //                    mmapLockTwo.busyLockLong(LOCK);
-                    /*mmapLockTwo.writeInt(COUNT, 1);*/
+                    mmapLockTwo.writeInt(COUNT, 1); // order matters as we don't have locks now
                     mmapLockTwo.writeBoolean(FLAG, true);
 //                    mmapLockTwo.unlockLong(LOCK);
                 }
@@ -368,15 +371,16 @@ public class ParallelOps {
                 while (!ready) {
 //                    mmapLockTwo.busyLockLong(LOCK);
                     ready = mmapLockTwo.readBoolean(FLAG);
-                    /*if (ready) {
-                        count = mmapLockTwo.readInt(COUNT);
+                    if (ready) {
+                        /*count = mmapLockTwo.readInt(COUNT);
                         ++count;
-                        mmapLockTwo.writeInt(COUNT, count);
+                        mmapLockTwo.writeInt(COUNT, count);*/
+                        count = mmapLockTwo.addAndGetInt(COUNT, 1);
                         if (count == mmapProcsCount) {
                             mmapLockTwo.writeBoolean(FLAG, false);
                             mmapLockTwo.writeInt(COUNT, 0);
                         }
-                    }*/
+                    }
 //                    mmapLockTwo.unlockLong(LOCK);
                 }
             }
