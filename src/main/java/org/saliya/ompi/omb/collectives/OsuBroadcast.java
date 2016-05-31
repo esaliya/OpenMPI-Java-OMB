@@ -108,6 +108,8 @@ public class OsuBroadcast {
                 }
 
                 ParallelOps.worldProcsComm.barrier();
+                // TODO - debugs
+                ParallelOps.broadCastCleanup();
             }
             // TODO - debugs
             if (stop) break;
