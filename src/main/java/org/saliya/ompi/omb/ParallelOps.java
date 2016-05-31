@@ -274,24 +274,26 @@ public class ParallelOps {
             }
             cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, mmapLeaderCgProcCommRankOfRoot);
             mmapLockTwo.busyLockLong(LOCK);
-            mmapLockTwo.writeBoolean(FLAG, true);
             mmapLockTwo.addAndGetInt(COUNT, 1);
+            mmapLockTwo.writeBoolean(FLAG, true);
             mmapLockTwo.unlockLong(LOCK);
         } else {
             boolean ready = false;
             while (!ready){
                 mmapLockTwo.busyLockLong(LOCK);
                 ready = mmapLockTwo.readBoolean(FLAG);
-                long count = mmapLockTwo.addAndGetInt(COUNT, 1);
-                if (count == mmapProcsCount){
-                    mmapLockTwo.writeBoolean(FLAG, false);
-                    mmapLockTwo.writeInt(COUNT, 0);
+                if (ready) {
+                    int count = mmapLockTwo.addAndGetInt(COUNT, 1);
+                    if (count == mmapProcsCount) {
+                        mmapLockTwo.writeBoolean(FLAG, false);
+                        mmapLockTwo.writeInt(COUNT, 0);
+                    }
                 }
                 mmapLockTwo.unlockLong(LOCK);
             }
         }
 
-        worldProcsComm.barrier();
+        /*worldProcsComm.barrier();*/
 
         if (root != worldProcRank){
             for (int i = 0; i < length; ++i){
