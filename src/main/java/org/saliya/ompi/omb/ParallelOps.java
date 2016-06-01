@@ -311,75 +311,61 @@ public class ParallelOps {
             mmapLockOne.writeBoolean(FLAG, true);
 
             if (!isMmapLead) return;
-            // TODO - debugs
-//            System.out.println("Rank " + worldProcRank + " is root and is done copying data");
         }
 
-        if (root != worldProcRank && isRankWithinMmap(root) && !isMmapLead){
-            // TODO - debugs
-//            System.out.println("Rank " + worldProcRank + " came to non root wait loop");
+        if (isRankWithinMmap(root) && !isMmapLead){
             /* I happen to be within the same mmap as root and I am not an mmaplead,
-            so read from shared buffer if root is done writing to it */
+               so read from shared buffer if root is done writing to it.
+               Note, the condition (&& root != worldProcRank) is not necessary
+               due to the return statement in above if logic */
             boolean ready = false;
             int count;
             while (!ready){
                 ready = mmapLockOne.readBoolean(FLAG);
-                if (ready) {
+            }
+            count = mmapLockOne.addAndGetInt(COUNT,1);
+            if (count == mmapProcsCount){
+                mmapLockOne.writeBoolean(FLAG, false);
+                mmapLockOne.writeInt(COUNT, 0);
+            }
+        } else {
+            if (ParallelOps.isMmapLead) {
+                if (isRankWithinMmap(root) && root != worldProcRank) {
+                    boolean ready = false;
+                    int count;
+                    while (!ready){
+                        ready = mmapLockOne.readBoolean(FLAG);
+                    }
                     count = mmapLockOne.addAndGetInt(COUNT,1);
-                    if (count == mmapProcsCount && worldProcsCount == mmapProcsCount){
+                    if (count == mmapProcsCount){
                         mmapLockOne.writeBoolean(FLAG, false);
                         mmapLockOne.writeInt(COUNT, 0);
                     }
                 }
-            }
-            // TODO - debugs
-//            System.out.println("Rank " + worldProcRank + " going to exit non root wait loop");
-        } else {
-            if (ParallelOps.isMmapLead) {
-                // TODO - debugs
-//                System.out.println("Rank " + worldProcRank + " is mmaplead so came to waiting loop on data from root");
-                if (root != worldProcRank) {
-                    boolean ready = false;
-                    int count;
-                    while (!ready) {
-                        ready = mmapLockOne.readBoolean(FLAG);
-                        if (ready) {
-                            count = mmapLockOne.addAndGetInt(COUNT, 1);
-                            if (count == mmapProcsCount) {
-                                mmapLockOne.writeBoolean(FLAG, false);
-                                mmapLockOne.writeInt(COUNT, 0);
-                            }
-                        }
-                    }
-                }
                 cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
-                if (root != worldProcRank) {
-                    mmapLockTwo.writeInt(COUNT, 1); // order matters as we don't have locks now
-                    mmapLockTwo.writeBoolean(FLAG, true);
+                if (!isRankWithinMmap(root)) {
+                    mmapLockOne.writeInt(COUNT, 1); // order matters as we don't have locks now
+                    mmapLockOne.writeBoolean(FLAG, true);
                 }
             } else {
                 boolean ready = false;
                 int count;
-                while (!ready) {
-                    ready = mmapLockTwo.readBoolean(FLAG);
-                    if (ready) {
-                        count = mmapLockTwo.addAndGetInt(COUNT, 1);
-                        if (count == mmapProcsCount) {
-                            mmapLockTwo.writeBoolean(FLAG, false);
-                            mmapLockTwo.writeInt(COUNT, 0);
-                        }
-                    }
+                while (!ready){
+                    ready = mmapLockOne.readBoolean(FLAG);
+                }
+                count = mmapLockOne.addAndGetInt(COUNT,1);
+                if (count == mmapProcsCount){
+                    mmapLockOne.writeBoolean(FLAG, false);
+                    mmapLockOne.writeInt(COUNT, 0);
                 }
             }
         }
 
-        if (root != worldProcRank){
-            mmapCollectiveBytes.position(0);
-            buffer.position(0);
-            mmapCollectiveBytes.read(buffer, length);
-            for (int i = 0; i < length; ++i){
-                buffer.put(i,mmapCollectiveBytes.readByte(i));
-            }
+        mmapCollectiveBytes.position(0);
+        buffer.position(0);
+        mmapCollectiveBytes.read(buffer, length);
+        for (int i = 0; i < length; ++i){
+            buffer.put(i,mmapCollectiveBytes.readByte(i));
         }
     }
 
