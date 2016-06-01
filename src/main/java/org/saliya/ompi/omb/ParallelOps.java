@@ -298,7 +298,7 @@ public class ParallelOps {
     public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException {
 
         // TODO - debugs
-        System.out.println("Rank: " + worldProcRank + " came to bcast ");
+        System.out.println("Rank: " + worldProcRank + " came to bcast " + " is null " + (cgProcCommRankOfMmapLeaderForRank == null));
         /* for now let's assume a second invocation of broadcast will NOT happen while some ranks are still
         *  doing the first invocation. If that happens, current implementation can screw up */
 
