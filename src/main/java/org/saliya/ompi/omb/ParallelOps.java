@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 public class ParallelOps {
     public static String machineName;
     public static int nodeCount=1;
-    public static int threadCount=1;
 
     public static int nodeId;
 
@@ -45,7 +44,6 @@ public class ParallelOps {
     public static int[] mmapProcsWorldRanks;
     public static int mmapLeadWorldRank;
     public static int mmapLeadWorldRankLocalToNode;
-    public static int mmapProcsRowCount;
 
     // mmap leaders form one communicating group and the others (followers)
     // belong to another communicating group.
@@ -56,9 +54,7 @@ public class ParallelOps {
     public static String mmapCollectiveFileName;
     public static String mmapCollectiveFileName2;
     public static String mmapLockFileNameOne;
-    public static String mmapLockFileNameTwo;
     public static Bytes mmapLockOne;
-    public static Bytes mmapLockTwo;
     public static Bytes mmapCollectiveBytes;
     public static Bytes mmapCollectiveBytes2;
     public static ByteBuffer mmapCollectiveByteBuffer;
@@ -71,9 +67,8 @@ public class ParallelOps {
 
     private static IntBuffer intBuffer;
 
-    private static int LOCK = 0;
-    private static int FLAG = Long.BYTES;
-    private static int COUNT = 2*Long.BYTES;
+    private static int FLAG = 0;
+    private static int COUNT = Long.BYTES;
 
     private static HashMap<Integer, Integer> cgProcCommRankOfMmapLeaderForRank;
 
@@ -91,7 +86,6 @@ public class ParallelOps {
 
         /* Create communicating groups */
         worldProcsPerNode = worldProcsCount / nodeCount;
-        boolean heterogeneous = (worldProcsPerNode * nodeCount) != worldProcsCount;
 
         /* Logic to identify how many processes are within a node and
         *  the q and r values. These are used to processes to mmap groups
@@ -140,11 +134,13 @@ public class ParallelOps {
         cgProcsCount = cgProcComm.getSize();
 
         boolean status = new File(mmapScratchDir).mkdirs();
+        if (!status){
+            throw new RuntimeException("Mmap directory creation failed");
+        }
         /* Allocate memory maps for collective communications like AllReduce and Broadcast */
         mmapCollectiveFileName = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective.bin";
         mmapCollectiveFileName2 = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective2.bin";
         mmapLockFileNameOne = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapLockOne.bin";
-        mmapLockFileNameTwo = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapLockTwo.bin";
         try (FileChannel mmapCollectiveFc = FileChannel
                 .open(Paths.get(mmapScratchDir, mmapCollectiveFileName),
                         StandardOpenOption.CREATE, StandardOpenOption.READ,
@@ -174,14 +170,6 @@ public class ParallelOps {
             if (isMmapLead){
                 mmapLockOne.writeBoolean(FLAG, false);
                 mmapLockOne.writeLong(COUNT, 0);
-            }
-
-            lockFile = new File(mmapScratchDir, mmapLockFileNameTwo);
-            fc = new RandomAccessFile(lockFile, "rw").getChannel();
-            mmapLockTwo = ByteBufferBytes.wrap(fc.map(FileChannel.MapMode.READ_WRITE, 0, 64));
-            if (isMmapLead){
-                mmapLockTwo.writeBoolean(FLAG, false);
-                mmapLockTwo.writeLong(COUNT, 0);
             }
         }
 
@@ -318,29 +306,11 @@ public class ParallelOps {
                so read from shared buffer if root is done writing to it.
                Note, the condition (&& root != worldProcRank) is not necessary
                due to the return statement in above if logic */
-            boolean ready = false;
-            int count;
-            while (!ready){
-                ready = mmapLockOne.readBoolean(FLAG);
-            }
-            count = mmapLockOne.addAndGetInt(COUNT,1);
-            if (count == mmapProcsCount){
-                mmapLockOne.writeBoolean(FLAG, false);
-                mmapLockOne.writeInt(COUNT, 0);
-            }
+            busyWaitTillDataReady();
         } else {
             if (ParallelOps.isMmapLead) {
                 if (isRankWithinMmap(root) && root != worldProcRank) {
-                    boolean ready = false;
-                    int count;
-                    while (!ready){
-                        ready = mmapLockOne.readBoolean(FLAG);
-                    }
-                    count = mmapLockOne.addAndGetInt(COUNT,1);
-                    if (count == mmapProcsCount){
-                        mmapLockOne.writeBoolean(FLAG, false);
-                        mmapLockOne.writeInt(COUNT, 0);
-                    }
+                    busyWaitTillDataReady();
                 }
                 cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
                 if (!isRankWithinMmap(root)) {
@@ -348,16 +318,7 @@ public class ParallelOps {
                     mmapLockOne.writeBoolean(FLAG, true);
                 }
             } else {
-                boolean ready = false;
-                int count;
-                while (!ready){
-                    ready = mmapLockOne.readBoolean(FLAG);
-                }
-                count = mmapLockOne.addAndGetInt(COUNT,1);
-                if (count == mmapProcsCount){
-                    mmapLockOne.writeBoolean(FLAG, false);
-                    mmapLockOne.writeInt(COUNT, 0);
-                }
+                busyWaitTillDataReady();
             }
         }
 
@@ -366,20 +327,17 @@ public class ParallelOps {
         mmapCollectiveBytes.read(buffer, length);
     }
 
-    public static void broadCastCleanup() throws MPIException, InterruptedException {
-        worldProcsComm.barrier();
-        if (isMmapLead){
-            mmapLockOne.busyLockLong(LOCK);
+    private static void busyWaitTillDataReady(){
+        boolean ready = false;
+        int count;
+        while (!ready){
+            ready = mmapLockOne.readBoolean(FLAG);
+        }
+        count = mmapLockOne.addAndGetInt(COUNT,1);
+        if (count == mmapProcsCount){
             mmapLockOne.writeBoolean(FLAG, false);
             mmapLockOne.writeInt(COUNT, 0);
-            mmapLockOne.unlockLong(LOCK);
-
-            mmapLockTwo.busyLockLong(LOCK);
-            mmapLockTwo.writeBoolean(FLAG, false);
-            mmapLockTwo.writeInt(COUNT, 0);
-            mmapLockTwo.unlockLong(LOCK);
         }
-        worldProcsComm.barrier();
     }
 
     private static boolean isRankWithinMmap(int rank){

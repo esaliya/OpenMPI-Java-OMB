@@ -83,7 +83,7 @@ public class OsuBroadcast {
                 }
 
                 // TODO - debugs
-                /*if (numBytes == maxMsgSize) {
+                if (numBytes == maxMsgSize) {
 //                    if (ParallelOps.worldProcRank == 22 || ParallelOps.worldProcRank == 43) {
                         boolean error = false;
                         StringBuilder sb = new StringBuilder();
@@ -94,22 +94,22 @@ public class OsuBroadcast {
                                 error = true;
                                 break;
                             }
-                            *//*sb.append((char)sbuff.get(i)).append(' ');*//*
+                            sb.append((char)sbuff.get(i)).append(' ');
                         }
-                        *//*System.out.println(sb.toString());*//*
+                        System.out.println(sb.toString());
                         if (!error) {
                             System.out.println("All good");
                         }
 //                    }
                     stop = true;
                     break;
-                }*/
+                }
 
                 ParallelOps.worldProcsComm.barrier();
             }
 
             // TODO - debugs
-            /*if (stop) break;*/
+            if (stop) break;
 
             double latency = (timer *1e6)/iterations;
             vbuff[0] = latency;
