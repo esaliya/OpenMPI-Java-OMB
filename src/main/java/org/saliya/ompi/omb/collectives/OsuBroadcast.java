@@ -46,10 +46,18 @@ public class OsuBroadcast {
             //System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
         }
 
+        // TODO - debugs
+        boolean stop = false;
+
         double [] vbuff = new double[1];
         for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
-                sbuff.put(i,((byte)'a'));
+                // TODO - debugs
+                if (ParallelOps.worldProcRank != 0) {
+                    sbuff.put(i, ((byte) 'a'));
+                } else {
+                    sbuff.put(i, ((byte) 'x'));
+                }
             }
 
             if (numBytes > largeMsgSize){
@@ -74,8 +82,34 @@ public class OsuBroadcast {
                     timer += tStop - tStart;
                 }
 
+                // TODO - debugs
+                if (numBytes == maxMsgSize) {
+                    if (ParallelOps.worldProcRank == 22 || ParallelOps.worldProcRank == 43) {
+                        boolean error = false;
+                        StringBuilder sb = new StringBuilder();
+                        for (int j = 0; j < numBytes; ++j) {
+                            char c = (char) sbuff.get(i);
+                            if (c != 'x'){
+                                System.out.println("Error in allgather for rank " + ParallelOps.worldProcRank);
+                                error = true;
+                                break;
+                            }
+                            /*sb.append((char)sbuff.get(i)).append(' ');*/
+                        }
+                        /*System.out.println(sb.toString());*/
+                        if (!error) {
+                            System.out.println("All good");
+                        }
+                    }
+                    stop = true;
+                    break;
+                }
+
                 ParallelOps.worldProcsComm.barrier();
             }
+
+            // TODO - debugs
+            if (stop) break;
 
             double latency = (timer *1e6)/iterations;
             vbuff[0] = latency;
