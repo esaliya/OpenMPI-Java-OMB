@@ -94,9 +94,9 @@ public class OsuBroadcast {
                                 error = true;
                                 break;
                             }
-                            sb.append((char)sbuff.get(i)).append(' ');
+//                            sb.append((char)sbuff.get(i)).append(' ');
                         }
-                        System.out.println(sb.toString());
+//                        System.out.println(sb.toString());
                         if (!error) {
                             System.out.println("All good");
                         }
