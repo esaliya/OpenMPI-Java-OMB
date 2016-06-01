@@ -329,8 +329,6 @@ public class ParallelOps {
                 }
             }
         } else {
-            // TODO - debugs
-            System.out.println("Rank: " + worldProcRank + " came into second else bcast ");
             if (ParallelOps.isMmapLead) {
                 if (root == worldProcRank) {
                     boolean ready = false;
