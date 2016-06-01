@@ -297,6 +297,8 @@ public class ParallelOps {
 
     public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException {
 
+        // TODO - debugs
+        System.out.println("Rank: " + worldProcRank + " came to bcast ");
         /* for now let's assume a second invocation of broadcast will NOT happen while some ranks are still
         *  doing the first invocation. If that happens, current implementation can screw up */
 
@@ -316,6 +318,9 @@ public class ParallelOps {
 
             if (!isMmapLead) return;
         }
+
+        // TODO - debugs
+        System.out.println("Rank: " + worldProcRank + " came after first if bcast ");
 
         if (root != worldProcRank && isRankWithinMmap(root) && !isMmapLead){
             /* I happen to be within the same mmap as root and I am not an mmaplead,
