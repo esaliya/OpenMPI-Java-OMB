@@ -311,9 +311,13 @@ public class ParallelOps {
             mmapLockOne.writeBoolean(FLAG, true);
 
             if (!isMmapLead) return;
+            // TODO - debugs
+//            System.out.println("Rank " + worldProcRank + " is root and is done copying data");
         }
 
         if (root != worldProcRank && isRankWithinMmap(root) && !isMmapLead){
+            // TODO - debugs
+//            System.out.println("Rank " + worldProcRank + " came to non root wait loop");
             /* I happen to be within the same mmap as root and I am not an mmaplead,
             so read from shared buffer if root is done writing to it */
             boolean ready = false;
@@ -328,9 +332,13 @@ public class ParallelOps {
                     }
                 }
             }
+            // TODO - debugs
+//            System.out.println("Rank " + worldProcRank + " going to exit non root wait loop");
         } else {
             if (ParallelOps.isMmapLead) {
-                if (root == worldProcRank) {
+                // TODO - debugs
+//                System.out.println("Rank " + worldProcRank + " is mmaplead so came to waiting loop on data from root");
+                if (root != worldProcRank) {
                     boolean ready = false;
                     int count;
                     while (!ready) {
