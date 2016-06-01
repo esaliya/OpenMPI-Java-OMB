@@ -296,15 +296,10 @@ public class ParallelOps {
     }
 
     public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException {
-
-
         /* for now let's assume a second invocation of broadcast will NOT happen while some ranks are still
         *  doing the first invocation. If that happens, current implementation can screw up */
 
-        Object obj = cgProcCommRankOfMmapLeaderForRank.get(root);
-        // TODO - debugs
-        System.out.println("Rank: " + worldProcRank + " came to bcast " + " is obj null " + (obj == null));
-        int cgProcRankOfMmapLeaderForRoot =  (int)obj;
+        int cgProcRankOfMmapLeaderForRoot =  cgProcCommRankOfMmapLeaderForRank.get(root);
         if (root == worldProcRank){
             /* I am the root and I've the content, so write to my shared buffer */
             mmapCollectiveBytes.position(0);
@@ -312,36 +307,26 @@ public class ParallelOps {
             for (int i = 0; i < length; ++i) {
                 mmapCollectiveBytes.writeByte(i, buffer.get(i));
             }
-//            mmapLockOne.busyLockLong(LOCK);
             mmapLockOne.writeInt(COUNT,1); // order matters as we don't have locks now
             mmapLockOne.writeBoolean(FLAG, true);
-            /*mmapLockOne.writeInt(COUNT, 1);*/
-//            mmapLockOne.unlockLong(LOCK);
 
             if (!isMmapLead) return;
         }
 
         if (root != worldProcRank && isRankWithinMmap(root) && !isMmapLead){
-            // TODO - debugs
-            System.out.println("Rank: " + worldProcRank + " came into second if bcast ");
             /* I happen to be within the same mmap as root and I am not an mmaplead,
             so read from shared buffer if root is done writing to it */
             boolean ready = false;
             int count;
             while (!ready){
-//                mmapLockOne.busyLockLong(LOCK);
                 ready = mmapLockOne.readBoolean(FLAG);
                 if (ready) {
-                    /*count = mmapLockOne.readInt(COUNT);
-                    ++count;
-                    mmapLockOne.writeInt(COUNT, count);*/
                     count = mmapLockOne.addAndGetInt(COUNT,1);
                     if (count == mmapProcsCount && worldProcsCount == mmapProcsCount){
                         mmapLockOne.writeBoolean(FLAG, false);
                         mmapLockOne.writeInt(COUNT, 0);
                     }
                 }
-//                mmapLockOne.unlockLong(LOCK);
             }
         } else {
             // TODO - debugs
@@ -351,45 +336,33 @@ public class ParallelOps {
                     boolean ready = false;
                     int count;
                     while (!ready) {
-//                        mmapLockOne.busyLockLong(LOCK);
                         ready = mmapLockOne.readBoolean(FLAG);
                         if (ready) {
-                            /*count = mmapLockOne.readInt(COUNT);
-                            ++count;
-                            mmapLockOne.writeInt(COUNT, count);*/
                             count = mmapLockOne.addAndGetInt(COUNT, 1);
                             if (count == mmapProcsCount) {
                                 mmapLockOne.writeBoolean(FLAG, false);
                                 mmapLockOne.writeInt(COUNT, 0);
                             }
                         }
-//                        mmapLockOne.unlockLong(LOCK);
                     }
                 }
                 cgProcComm.bcast(mmapCollectiveByteBuffer, length, MPI.BYTE, cgProcRankOfMmapLeaderForRoot);
                 if (root != worldProcRank) {
-//                    mmapLockTwo.busyLockLong(LOCK);
                     mmapLockTwo.writeInt(COUNT, 1); // order matters as we don't have locks now
                     mmapLockTwo.writeBoolean(FLAG, true);
-//                    mmapLockTwo.unlockLong(LOCK);
                 }
             } else {
                 boolean ready = false;
                 int count;
                 while (!ready) {
-//                    mmapLockTwo.busyLockLong(LOCK);
                     ready = mmapLockTwo.readBoolean(FLAG);
                     if (ready) {
-                        /*count = mmapLockTwo.readInt(COUNT);
-                        ++count;
-                        mmapLockTwo.writeInt(COUNT, count);*/
                         count = mmapLockTwo.addAndGetInt(COUNT, 1);
                         if (count == mmapProcsCount) {
                             mmapLockTwo.writeBoolean(FLAG, false);
                             mmapLockTwo.writeInt(COUNT, 0);
                         }
                     }
-//                    mmapLockTwo.unlockLong(LOCK);
                 }
             }
         }
@@ -398,9 +371,9 @@ public class ParallelOps {
             mmapCollectiveBytes.position(0);
             buffer.position(0);
             mmapCollectiveBytes.read(buffer, length);
-            /*for (int i = 0; i < length; ++i){
+            for (int i = 0; i < length; ++i){
                 buffer.put(i,mmapCollectiveBytes.readByte(i));
-            }*/
+            }
         }
     }
 

@@ -46,18 +46,10 @@ public class OsuBroadcast {
             //System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
         }
 
-        // TODO - debugs
-        boolean stop = false;
         double [] vbuff = new double[1];
         for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
-                /*sbuff.put(i,((byte)'a'));*/
-                // TODO - debugs
-                if (ParallelOps.worldProcRank == 2){
-                    sbuff.put(i,((byte)'b'));
-                } else {
-                    sbuff.put(i,((byte)'z'));
-                }
+                sbuff.put(i,((byte)'a'));
             }
 
             if (numBytes > largeMsgSize){
@@ -70,49 +62,20 @@ public class OsuBroadcast {
             double tStart, tStop;
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
-                // TODO - debugs
-                /*ParallelOps.worldProcsComm.barrier();*/
 
                 tStart = MPI.wtime();
                 if (!isMmap) {
-                    ParallelOps.worldProcsComm.bcast(sbuff, numBytes, MPI.BYTE, 2);
+                    ParallelOps.worldProcsComm.bcast(sbuff, numBytes, MPI.BYTE, 0);
                 } else {
-                    ParallelOps.broadcast(sbuff, numBytes, 2);
+                    ParallelOps.broadcast(sbuff, numBytes, 0);
                 }
                 tStop = MPI.wtime();
                 if (i >= skip){
                     timer += tStop - tStart;
                 }
 
-                // TODO - debugs
-                /*if (numBytes == maxMsgSize) {
-                    if (ParallelOps.worldProcRank == 22) {
-                        boolean error = false;
-                        StringBuilder sb = new StringBuilder();
-                        for (int j = 0; j < numBytes; ++j) {
-                            char c = (char) sbuff.get(i);
-                            if (c != 'b'){
-                                System.out.println("Error in allgather ");
-                                error = true;
-                                break;
-                            }
-                            *//*sb.append((char)sbuff.get(i)).append(' ');*//*
-                        }
-                        *//*System.out.println(sb.toString());*//*
-                        if (!error) {
-                            System.out.println("All good");
-                        }
-                    }
-                    stop = true;
-                    break;
-                }*/
-
                 ParallelOps.worldProcsComm.barrier();
-                // TODO - debugs
-                /*ParallelOps.broadCastCleanup();*/
             }
-            // TODO - debugs
-            if (stop) break;
 
             double latency = (timer *1e6)/iterations;
             vbuff[0] = latency;
