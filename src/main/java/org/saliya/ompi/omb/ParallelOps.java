@@ -134,9 +134,7 @@ public class ParallelOps {
         cgProcsCount = cgProcComm.getSize();
 
         boolean status = new File(mmapScratchDir).mkdirs();
-        if (!status){
-            throw new RuntimeException("Mmap directory creation failed");
-        }
+
         /* Allocate memory maps for collective communications like AllReduce and Broadcast */
         mmapCollectiveFileName = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective.bin";
         mmapCollectiveFileName2 = machineName + ".mmapId." + mmapIdLocalToNode + ".mmapCollective2.bin";
