@@ -319,10 +319,9 @@ public class ParallelOps {
             if (!isMmapLead) return;
         }
 
-        // TODO - debugs
-        System.out.println("Rank: " + worldProcRank + " came after first if bcast ");
-
         if (root != worldProcRank && isRankWithinMmap(root) && !isMmapLead){
+            // TODO - debugs
+            System.out.println("Rank: " + worldProcRank + " came into second if bcast ");
             /* I happen to be within the same mmap as root and I am not an mmaplead,
             so read from shared buffer if root is done writing to it */
             boolean ready = false;
@@ -343,6 +342,8 @@ public class ParallelOps {
 //                mmapLockOne.unlockLong(LOCK);
             }
         } else {
+            // TODO - debugs
+            System.out.println("Rank: " + worldProcRank + " came into second else bcast ");
             if (ParallelOps.isMmapLead) {
                 if (root == worldProcRank) {
                     boolean ready = false;
