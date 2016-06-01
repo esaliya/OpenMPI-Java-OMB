@@ -83,7 +83,7 @@ public class OsuBroadcast {
                 }
 
                 // TODO - debugs
-                if (numBytes == maxMsgSize) {
+                /*if (numBytes == maxMsgSize) {
 //                    if (ParallelOps.worldProcRank == 22 || ParallelOps.worldProcRank == 43) {
                         boolean error = false;
                         StringBuilder sb = new StringBuilder();
@@ -103,13 +103,13 @@ public class OsuBroadcast {
 //                    }
                     stop = true;
                     break;
-                }
+                }*/
 
                 ParallelOps.worldProcsComm.barrier();
             }
 
             // TODO - debugs
-            if (stop) break;
+            /*if (stop) break;*/
 
             double latency = (timer *1e6)/iterations;
             vbuff[0] = latency;
