@@ -361,12 +361,12 @@ public class ParallelOps {
             }
         }
 
-        /*mmapCollectiveBytes.position(0);
+        mmapCollectiveBytes.position(0);
         buffer.position(0);
         mmapCollectiveBytes.read(buffer, length);
         for (int i = 0; i < length; ++i){
             buffer.put(i,mmapCollectiveBytes.readByte(i));
-        }*/
+        }
     }
 
     public static void broadCastCleanup() throws MPIException, InterruptedException {
