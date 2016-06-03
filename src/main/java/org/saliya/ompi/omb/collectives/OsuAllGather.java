@@ -40,7 +40,7 @@ public class OsuAllGather {
         ByteBuffer rbuff = MPI.newByteBuffer(byteBytes * ParallelOps.worldProcsCount);
 
         String msg = "Rank " + ParallelOps.worldProcRank + " is on " + MPI.getProcessorName() + "\n";
-        msg = MpiOps.allReduceStr(msg, ParallelOps.worldProcsComm);
+//        msg = MpiOps.allReduceStr(msg, ParallelOps.worldProcsComm);
         if (ParallelOps.worldProcRank == 0){
             System.out.println(msg);
             System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
@@ -84,7 +84,7 @@ public class OsuAllGather {
                 // TODO - debugs
                 if (numBytes == 8) {
                     boolean error = false;
-                    if (ParallelOps.worldProcRank == 33) {
+//                    if (ParallelOps.worldProcRank == 33) {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes*ParallelOps.worldProcsCount; ++j) {
                             char c = (char) rbuff.get(j);
@@ -99,7 +99,7 @@ public class OsuAllGather {
                             System.out.println("All good");
                         }
 //                        System.out.println(sb.toString());
-                    }
+//                    }
                     stop = true;
                     break;
                 }
