@@ -88,7 +88,7 @@ public class OsuBroadcast {
                         boolean error = false;
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes; ++j) {
-                            char c = (char) sbuff.get(i);
+                            char c = (char) sbuff.get(j);
                             if (c != 'x'){
                                 System.out.println("Error in allgather for rank " + ParallelOps.worldProcRank);
                                 error = true;
