@@ -88,9 +88,17 @@ public class OsuAllGather {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes*ParallelOps.worldProcsCount; ++j) {
                             char c = (char) rbuff.get(j);
-                            if (c != 'b'){
-                                error=true;
-                                System.out.println("Error in allgather ");
+                            if (j < numBytes){
+                                if (c != 'b') {
+                                    error = true;
+                                    System.out.println("Rank: " + ParallelOps.worldProcRank +
+                                            " Error in allgather - rank 0's content should be all 'b's ");
+                                    break;
+                                }
+                            } else if (c != 'z') {
+                                error = true;
+                                System.out.println("Rank: " + ParallelOps.worldProcRank +
+                                        " Error in allgather - other ranks' content should be all 'z's ");
                                 break;
                             }
 //                            sb.append(c).append(' ');
