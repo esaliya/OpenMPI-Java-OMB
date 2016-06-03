@@ -5,10 +5,14 @@ import mpi.MPI;
 import mpi.MPIException;
 import net.openhft.lang.io.ByteBufferBytes;
 import net.openhft.lang.io.Bytes;
+import org.jetbrains.annotations.NotNull;
+import sun.misc.Unsafe;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.reflect.Field;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.IntBuffer;
@@ -20,6 +24,23 @@ import java.util.HashSet;
 import java.util.regex.Pattern;
 
 public class ParallelOps {
+    /**
+     * *** Access the Unsafe class *****
+     */
+    @NotNull
+    @SuppressWarnings("ALL")
+    public static final Unsafe UNSAFE;
+
+    static {
+        try {
+            @SuppressWarnings("ALL") Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            UNSAFE = (Unsafe) theUnsafe.get(null);
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
+
     public static String machineName;
     public static int nodeCount=1;
 
@@ -281,7 +302,12 @@ public class ParallelOps {
         return new int[]{q,r};
     }
 
-    public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException {
+    public static long getDirectByteBufferAddressViaField(ByteBuffer buffer) throws NoSuchFieldException {
+        long addressOffset = UNSAFE.objectFieldOffset(Buffer.class.getDeclaredField("address"));
+        return UNSAFE.getLong(buffer, addressOffset);
+    }
+
+    public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException, NoSuchFieldException {
         /* for now let's assume a second invocation of broadcast will NOT happen while some ranks are still
         *  doing the first invocation. If that happens, current implementation can screw up */
 
@@ -320,9 +346,13 @@ public class ParallelOps {
             }
         }
 
-        mmapCollectiveBytes.position(0);
+        /*mmapCollectiveBytes.position(0);
         buffer.position(0);
-        mmapCollectiveBytes.read(buffer, length);
+        mmapCollectiveBytes.read(buffer, length);*/
+
+        long fromAddress = getDirectByteBufferAddressViaField(mmapCollectiveByteBuffer);
+        long toAddress = getDirectByteBufferAddressViaField(buffer);
+        UNSAFE.copyMemory(fromAddress, toAddress, length);
     }
 
     private static void busyWaitTillDataReady(){
