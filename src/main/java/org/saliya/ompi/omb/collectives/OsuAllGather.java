@@ -47,7 +47,7 @@ public class OsuAllGather {
         }
 
         // TODO - debugs
-        boolean stop = false;
+        /*boolean stop = false;*/
         double [] vbuff = new double[1];
         for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
@@ -82,7 +82,7 @@ public class OsuAllGather {
                 }
 
                 // TODO - debugs
-                if (numBytes == 8) {
+                /*if (numBytes == 8) {
                     if (ParallelOps.worldProcRank == 33) {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes*ParallelOps.worldProcsCount; ++j) {
@@ -91,19 +91,19 @@ public class OsuAllGather {
                                 System.out.println("Error in allgather ");
                                 break;
                             }
-                            /*sb.append(c).append(' ');*/
+                            *//*sb.append(c).append(' ');*//*
                         }
                         System.out.println("All good");
-                        /*System.out.println(sb.toString());*/
+                        *//*System.out.println(sb.toString());*//*
                     }
                     stop = true;
                     break;
-                }
+                }*/
 
                 ParallelOps.worldProcsComm.barrier();
             }
             // TODO - debugs
-            if (stop) break;
+            /*if (stop) break;*/
 
             double latency = (timer *1e6)/iterations;
             vbuff[0] = latency;
