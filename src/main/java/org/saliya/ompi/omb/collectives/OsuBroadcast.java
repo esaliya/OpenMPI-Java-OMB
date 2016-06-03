@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
  */
 
 public class OsuBroadcast {
-    public static void main(String[] args) throws MPIException, IOException, InterruptedException {
+    public static void main(String[] args) throws MPIException, IOException, InterruptedException, NoSuchFieldException {
         int maxMsgSize = 1<<20; // 1MB, i.e. 1024x1024 bytes
         int largeMsgSize = 8192;
         int skip = 200;
