@@ -83,17 +83,21 @@ public class OsuAllGather {
 
                 // TODO - debugs
                 if (numBytes == 8) {
+                    boolean error = false;
                     if (ParallelOps.worldProcRank == 33) {
                         StringBuilder sb = new StringBuilder();
                         for (int j = 0; j < numBytes*ParallelOps.worldProcsCount; ++j) {
                             char c = (char) rbuff.get(j);
                             if (c != 'b'){
+                                error=true;
                                 System.out.println("Error in allgather ");
                                 break;
                             }
 //                            sb.append(c).append(' ');
                         }
-                        System.out.println("All good");
+                        if (!error){
+                            System.out.println("All good");
+                        }
 //                        System.out.println(sb.toString());
                     }
                     stop = true;
