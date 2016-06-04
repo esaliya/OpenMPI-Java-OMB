@@ -402,6 +402,12 @@ public class ParallelOps {
         /*for now let's assume a second invocation of allGather will NOT happen while some ranks are still
         doing the first invocation. If that happens, the current implementation can screw up*/
 
+        /* special case when #procs per memory map group is 1. Then there's no need to go through the hassle of
+        *  making memory maps. Also, this should be done only when running in uniform settings*/
+        if (!isHeterogeneous && mmapProcsCount == 1) {
+            ParallelOps.worldProcsComm.allGather(sbuff, numBytes, MPI.BYTE, rbuff, numBytes, MPI.BYTE);
+        }
+
         int offset = mmapProcRank*numBytes;
         for (int i = 0; i < numBytes; ++i){
             mmapCollectiveBytes.writeByte(offset+i, sbuff.get(i));
