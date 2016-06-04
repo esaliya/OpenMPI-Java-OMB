@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
  *         Tori Wilbon (toriwilbon at gmail dot com)
  */
 public class OsuAllGather {
-    public static void main(String[] args) throws MPIException, IOException {
+    public static void main(String[] args) throws MPIException, IOException, NoSuchFieldException {
         int maxMsgSize = 1<<20; // 1MB, i.e. 1024x1024 bytes
         int largeMsgSize = 8192;
         int skip = 200;
@@ -81,7 +81,7 @@ public class OsuAllGather {
                 }
 
                 // TODO - debugs
-                /*if (numBytes == maxMsgSize) {
+                if (numBytes == maxMsgSize) {
                     boolean error = false;
                     StringBuilder sb = new StringBuilder();
                     for (int j = 0; j < numBytes*ParallelOps.worldProcsCount; ++j) {
@@ -107,7 +107,7 @@ public class OsuAllGather {
 //                        System.out.println(sb.toString());
                     stop = true;
                     break;
-                }*/
+                }
 
                 ParallelOps.worldProcsComm.barrier();
             }

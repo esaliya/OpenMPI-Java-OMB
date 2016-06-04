@@ -398,7 +398,7 @@ public class ParallelOps {
         }
     }*/
 
-    public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException {
+    public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException, NoSuchFieldException {
         /*for now let's assume a second invocation of allGather will NOT happen while some ranks are still
         doing the first invocation. If that happens, the current implementation can screw up*/
 
@@ -436,8 +436,11 @@ public class ParallelOps {
             busyWaitTillDataReady();
         }
 
-        for (int i = 0; i < numBytes*worldProcsCount; ++i){
+        /*for (int i = 0; i < numBytes*worldProcsCount; ++i){
             rbuff.put(i, mmapCollectiveBytes2.readByte(i));
-        }
+        }*/
+        long fromAddress = getDirectByteBufferAddressViaField(mmapCollectiveByteBuffer2);
+        long toAddress = getDirectByteBufferAddressViaField(rbuff);
+        UNSAFE.copyMemory(fromAddress, toAddress, numBytes*worldProcsCount);
     }
 }
