@@ -416,10 +416,11 @@ public class ParallelOps {
             cgProcComm.allGather(mmapCollectiveByteBuffer, numBytes*mmapProcsCount, MPI.BYTE, mmapCollectiveByteBuffer2, numBytes*mmapProcsCount, MPI.BYTE);
             // TODO - debugs
             System.out.println("Rank: " + worldProcRank + " mmap lead came after MPI allgather");
-            mmapLockOne.writeInt(COUNT, 1);
+            mmapLockOne.writeInt(COUNT, 1); // order matters as no locks
             mmapLockOne.writeBoolean(FLAG, true);
         } else {
             busyWaitTillDataReady();
+            System.out.println("-- Rank: " + worldProcRank + " non mmap lead (lead is " + mmapLeadWorldRank + ") came after allgather");
         }
 
         for (int i = 0; i < numBytes*worldProcsCount; ++i){
