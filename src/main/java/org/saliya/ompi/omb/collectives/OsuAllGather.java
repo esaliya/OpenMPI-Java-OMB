@@ -97,14 +97,14 @@ public class OsuAllGather {
                             if (j < numBytes){
                                 if (c != 'b') {
                                     error = true;
-//                                    System.out.println("Rank: " + ParallelOps.worldProcRank +
-//                                            " Error in allgather - rank 0's content should be all 'b's ");
+                                    System.out.println("Rank: " + ParallelOps.worldProcRank +
+                                            " Error in allgather - rank 0's content should be all 'b's ");
 //                                    break;
                                 }
                             } else if (c != 'z') {
                                 error = true;
-//                                System.out.println("Rank: " + ParallelOps.worldProcRank +
-//                                        " Error in allgather - other ranks' content should be all 'z's but it's [" + c + "]");
+                                System.out.println("Rank: " + ParallelOps.worldProcRank +
+                                        " Error in allgather - other ranks' content should be all 'z's but it's [" + c + "]");
 //                                break;
                             }
                             sb.append(c).append(' ');
@@ -112,7 +112,7 @@ public class OsuAllGather {
                         if (!error){
                             System.out.println("All good");
                         }
-//                        System.out.println(sb.toString());
+                        System.out.println(sb.toString());
 //                    }
                     stop = true;
                     break;
