@@ -383,7 +383,7 @@ public class ParallelOps {
         return (mmapLeadWorldRank <= rank && rank <= (mmapLeadWorldRank+mmapProcsCount));
     }
 
-    public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException {
+    /*public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException {
         int offset = mmapProcRank*numBytes;
         for (int i = 0; i < numBytes; ++i){
             mmapCollectiveBytes.writeByte(offset+i, sbuff.get(i));
@@ -396,11 +396,11 @@ public class ParallelOps {
         for (int i = 0; i < numBytes*worldProcsCount; ++i){
             rbuff.put(i, mmapCollectiveBytes2.readByte(i));
         }
-    }
+    }*/
 
-    /*public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException {
-        *//* for now let's assume a second invocation of allGather will NOT happen while some ranks are still
-        *  doing the first invocation. If that happens, the current implementation can screw up *//*
+    public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException {
+        /*for now let's assume a second invocation of allGather will NOT happen while some ranks are still
+        doing the first invocation. If that happens, the current implementation can screw up*/
 
         int offset = mmapProcRank*numBytes;
         for (int i = 0; i < numBytes; ++i){
@@ -420,8 +420,8 @@ public class ParallelOps {
             busyWaitTillDataReady();
         }
 
-        for (int i = 0; i < numBytes*mmapProcsCount; ++i){
+        for (int i = 0; i < numBytes*worldProcsCount; ++i){
             rbuff.put(i, mmapCollectiveBytes2.readByte(i));
         }
-    }*/
+    }
 }
