@@ -51,7 +51,9 @@ public class OsuAllGather {
         // TODO - debugs
         boolean stop = false;
         double [] vbuff = new double[1];
-        for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
+        // TODO - debugs
+//        for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
+        for (int numBytes = 1; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
                 /*sbuff.put(i,((byte)'a'));*/
                 // TODO - debugs
@@ -71,9 +73,7 @@ public class OsuAllGather {
             double timer = 0.0;
             double tStart, tStop;
             double minLatency, maxLatency, avgLatency;
-//            for (int i = 0; i < iterations + skip; ++i){
-            // TODO - debugs
-            for (int i = 1; i < iterations + skip; ++i){
+            for (int i = 0; i < iterations + skip; ++i){
                 // TODO - debugs
                 //System.out.println("Rank: " + ParallelOps.worldProcRank  + " numBytes=" + numBytes + " of " + maxMsgSize + " i=" + i + " of " + iterations);
                 tStart = MPI.wtime();
