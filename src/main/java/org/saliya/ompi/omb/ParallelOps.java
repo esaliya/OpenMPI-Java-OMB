@@ -309,7 +309,7 @@ public class ParallelOps {
 
     public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException, NoSuchFieldException {
         /* for now let's assume a second invocation of broadcast will NOT happen while some ranks are still
-        *  doing the first invocation. If that happens, current implementation can screw up */
+        *  doing the first invocation. If that happens, the current implementation can screw up */
 
         int cgProcRankOfMmapLeaderForRoot =  cgProcCommRankOfMmapLeaderForRank.get(root);
         if (root == worldProcRank){
@@ -372,7 +372,7 @@ public class ParallelOps {
         return (mmapLeadWorldRank <= rank && rank <= (mmapLeadWorldRank+mmapProcsCount));
     }
 
-    public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException {
+    /*public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException {
         int offset = mmapProcRank*numBytes;
         for (int i = 0; i < numBytes; ++i){
             mmapCollectiveBytes.writeByte(offset+i, sbuff.get(i));
@@ -382,6 +382,34 @@ public class ParallelOps {
             cgProcComm.allGather(mmapCollectiveByteBuffer, numBytes*mmapProcsCount, MPI.BYTE, mmapCollectiveByteBuffer2, numBytes*mmapProcsCount, MPI.BYTE);
         }
         worldProcsComm.barrier();
+        for (int i = 0; i < numBytes*mmapProcsCount; ++i){
+            rbuff.put(i, mmapCollectiveBytes2.readByte(i));
+        }
+    }*/
+
+    public static void allGather(ByteBuffer sbuff, int numBytes, ByteBuffer rbuff) throws MPIException {
+        /* for now let's assume a second invocation of allGather will NOT happen while some ranks are still
+        *  doing the first invocation. If that happens, the current implementation can screw up */
+
+        int offset = mmapProcRank*numBytes;
+        for (int i = 0; i < numBytes; ++i){
+            mmapCollectiveBytes.writeByte(offset+i, sbuff.get(i));
+        }
+        mmapLockOne.addAndGetInt(COUNT, 1);
+
+//        worldProcsComm.barrier();
+        if(isMmapLead){
+            int count = 0;
+            while (count != mmapProcsCount){
+                count = mmapLockOne.readInt(COUNT);
+            }
+            cgProcComm.allGather(mmapCollectiveByteBuffer, numBytes*mmapProcsCount, MPI.BYTE, mmapCollectiveByteBuffer2, numBytes*mmapProcsCount, MPI.BYTE);
+            mmapLockOne.writeInt(COUNT, 1);
+            mmapLockOne.writeBoolean(FLAG, true);
+        } else {
+            busyWaitTillDataReady();
+        }
+
         for (int i = 0; i < numBytes*mmapProcsCount; ++i){
             rbuff.put(i, mmapCollectiveBytes2.readByte(i));
         }
