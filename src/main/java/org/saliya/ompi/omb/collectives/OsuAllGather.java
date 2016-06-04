@@ -27,7 +27,7 @@ public class OsuAllGather {
             maxMsgSize = Integer.parseInt(args[0]);
         }
 
-        if (args.length == 2){
+        if (args.length >= 2){
             iterations = iterationsLarge = Integer.parseInt(args[1]);
         }
 
