@@ -91,6 +91,8 @@ public class ParallelOps {
     private static int FLAG = 0;
     private static int COUNT = Long.BYTES;
 
+    private static boolean isHeterogeneous = false;
+
     private static HashMap<Integer, Integer> cgProcCommRankOfMmapLeaderForRank;
 
     public static void setupParallelism(String[] args, int maxMsgSize, String mmapDir) throws MPIException, IOException {
@@ -117,6 +119,8 @@ public class ParallelOps {
         int[] qr = findQandR();
         int q = qr[0];
         int r = qr[1];
+
+        isHeterogeneous = (worldProcsPerNode * nodeCount) != worldProcsCount;
 
         // Memory mapped groups and communicating groups
         mmapIdLocalToNode =
@@ -310,6 +314,13 @@ public class ParallelOps {
     public static void broadcast(ByteBuffer buffer, int length, int root) throws MPIException, InterruptedException, NoSuchFieldException {
         /* for now let's assume a second invocation of broadcast will NOT happen while some ranks are still
         *  doing the first invocation. If that happens, the current implementation can screw up */
+
+        /* special case when #procs per memory map group is 1. Then there's no need to go through the hassle of
+        *  making memory maps. Also, this should be done only when running in uniform settings*/
+        if (!isHeterogeneous && mmapProcsCount == 1){
+            worldProcsComm.bcast(buffer, length, MPI.BYTE, root);
+            return;
+        }
 
         int cgProcRankOfMmapLeaderForRoot =  cgProcCommRankOfMmapLeaderForRank.get(root);
         if (root == worldProcRank){
