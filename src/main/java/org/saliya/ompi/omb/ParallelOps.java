@@ -388,6 +388,8 @@ public class ParallelOps {
         for (int i = 0; i < numBytes; ++i){
             mmapCollectiveBytes.writeByte(offset+i, sbuff.get(i));
         }
+        // TODO - debugs
+        System.out.println("Rank: " + worldProcRank + " " + (char)mmapCollectiveBytes.readByte(0));
         worldProcsComm.barrier();
         if(isMmapLead){
             cgProcComm.allGather(mmapCollectiveByteBuffer, numBytes*mmapProcsCount, MPI.BYTE, mmapCollectiveByteBuffer2, numBytes*mmapProcsCount, MPI.BYTE);
