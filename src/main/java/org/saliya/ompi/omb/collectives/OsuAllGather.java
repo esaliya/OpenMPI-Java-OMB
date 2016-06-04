@@ -17,8 +17,9 @@ public class OsuAllGather {
     public static void main(String[] args) throws MPIException, IOException {
         int maxMsgSize = 1<<20; // 1MB, i.e. 1024x1024 bytes
         int largeMsgSize = 8192;
+        // TODO - debugs
 //        int skip = 200;
-        int skip = 1;
+        int skip = 0;
         int skipLarge = 10;
         int iterations = 1000;
         int iterationsLarge = 100;
