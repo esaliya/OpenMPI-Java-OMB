@@ -17,9 +17,7 @@ public class OsuAllGather {
     public static void main(String[] args) throws MPIException, IOException {
         int maxMsgSize = 1<<20; // 1MB, i.e. 1024x1024 bytes
         int largeMsgSize = 8192;
-        // TODO - debugs
-//        int skip = 200;
-        int skip = 0;
+        int skip = 200;
         int skipLarge = 10;
         int iterations = 1000;
         int iterationsLarge = 100;
@@ -42,18 +40,15 @@ public class OsuAllGather {
         ByteBuffer rbuff = MPI.newByteBuffer(byteBytes * ParallelOps.worldProcsCount);
 
         String msg = "Rank " + ParallelOps.worldProcRank + " is on " + MPI.getProcessorName() + "\n";
-//        msg = MpiOps.allReduceStr(msg, ParallelOps.worldProcsComm);
         if (ParallelOps.worldProcRank == 0){
-//            System.out.println(msg);
-//            System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
+            System.out.println(msg);
+            System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
         }
 
         // TODO - debugs
         boolean stop = false;
         double [] vbuff = new double[1];
-        // TODO - debugs
-//        for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
-        for (int numBytes = 1; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
+        for (int numBytes = 0; numBytes <= maxMsgSize; numBytes = (numBytes == 0 ? 1 : numBytes*2)){
             for (int i = 0; i < byteBytes; ++i){
                 /*sbuff.put(i,((byte)'a'));*/
                 // TODO - debugs
@@ -74,8 +69,6 @@ public class OsuAllGather {
             double tStart, tStop;
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
-                // TODO - debugs
-                //System.out.println("Rank: " + ParallelOps.worldProcRank  + " numBytes=" + numBytes + " of " + maxMsgSize + " i=" + i + " of " + iterations);
                 tStart = MPI.wtime();
                 if (!isMmap) {
                     ParallelOps.worldProcsComm.allGather(sbuff, numBytes, MPI.BYTE, rbuff, numBytes, MPI.BYTE);
@@ -88,32 +81,30 @@ public class OsuAllGather {
                 }
 
                 // TODO - debugs
-                if (numBytes == 1) {
+                if (numBytes == maxMsgSize) {
                     boolean error = false;
-//                    if (ParallelOps.worldProcRank == 33) {
-                        StringBuilder sb = new StringBuilder();
-                        for (int j = 0; j < numBytes*ParallelOps.worldProcsCount; ++j) {
-                            char c = (char) rbuff.get(j);
-                            if (j < numBytes){
-                                if (c != 'b') {
-                                    error = true;
-                                    System.out.println("Rank: " + ParallelOps.worldProcRank +
-                                            " Error in allgather - rank 0's content should be all 'b's ");
-//                                    break;
-                                }
-                            } else if (c != 'z') {
+                    StringBuilder sb = new StringBuilder();
+                    for (int j = 0; j < numBytes*ParallelOps.worldProcsCount; ++j) {
+                        char c = (char) rbuff.get(j);
+                        if (j < numBytes){
+                            if (c != 'b') {
                                 error = true;
                                 System.out.println("Rank: " + ParallelOps.worldProcRank +
-                                        " Error in allgather - other ranks' content should be all 'z's but it's [" + c + "]");
-//                                break;
+                                        " Error in allgather - rank 0's content should be all 'b's ");
+                                break;
                             }
-                            sb.append(c).append(' ');
+                        } else if (c != 'z') {
+                            error = true;
+                            System.out.println("Rank: " + ParallelOps.worldProcRank +
+                                    " Error in allgather - other ranks' content should be all 'z's but it's [" + c + "]");
+                            break;
                         }
-                        if (!error){
-                            System.out.println("All good");
-                        }
-                        System.out.println(sb.toString());
-//                    }
+//                            sb.append(c).append(' ');
+                    }
+                    if (!error){
+                        System.out.println("All good");
+                    }
+//                        System.out.println(sb.toString());
                     stop = true;
                     break;
                 }
@@ -134,7 +125,7 @@ public class OsuAllGather {
             ParallelOps.worldProcsComm.reduce(vbuff,1,MPI.DOUBLE,MPI.SUM,0);
             avgLatency = vbuff[0] / ParallelOps.worldProcsCount;
             if (ParallelOps.worldProcRank == 0){
-//                System.out.println(numBytes + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
+                System.out.println(numBytes + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
             }
             ParallelOps.worldProcsComm.barrier();
         }
