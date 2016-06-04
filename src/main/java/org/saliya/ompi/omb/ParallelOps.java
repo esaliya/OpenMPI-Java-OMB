@@ -414,13 +414,19 @@ public class ParallelOps {
                 count = mmapLockOne.readInt(COUNT);
             }
             cgProcComm.allGather(mmapCollectiveByteBuffer, numBytes*mmapProcsCount, MPI.BYTE, mmapCollectiveByteBuffer2, numBytes*mmapProcsCount, MPI.BYTE);
-            // TODO - debugs
-            System.out.println("Rank: " + worldProcRank + " mmap lead came after MPI allgather");
-            mmapLockOne.writeInt(COUNT, 1); // order matters as no locks
-            mmapLockOne.writeBoolean(FLAG, true);
+            if (mmapProcsCount > 1) {
+                mmapLockOne.writeInt(COUNT, 1); // order matters as no locks
+                mmapLockOne.writeBoolean(FLAG, true);
+            } else {
+                /* This is for the case if you only have 1 proc per mmap,
+                * then it needs to clear the flag and reset the count.
+                * We special case when 1 proc per mmap under uniform mode, but
+                * in a heterogeneous setting it's possible to have an mmap with 1 proc, hence this logic*/
+                mmapLockOne.writeInt(COUNT, 0); // order does NOT matter for this case
+                mmapLockOne.writeBoolean(FLAG, false);
+            }
         } else {
             busyWaitTillDataReady();
-            System.out.println("-- Rank: " + worldProcRank + " non mmap lead (lead is " + mmapLeadWorldRank + ") came after allgather");
         }
 
         for (int i = 0; i < numBytes*worldProcsCount; ++i){
