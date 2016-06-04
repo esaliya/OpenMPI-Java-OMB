@@ -81,7 +81,7 @@ public class OsuAllGather {
                 }
 
                 // TODO - debugs
-                if (numBytes == maxMsgSize) {
+                /*if (numBytes == maxMsgSize) {
                     boolean error = false;
                     StringBuilder sb = new StringBuilder();
                     for (int j = 0; j < numBytes*ParallelOps.worldProcsCount; ++j) {
@@ -107,7 +107,7 @@ public class OsuAllGather {
 //                        System.out.println(sb.toString());
                     stop = true;
                     break;
-                }
+                }*/
 
                 ParallelOps.worldProcsComm.barrier();
             }
