@@ -82,7 +82,7 @@ public class OsuAllGather {
                 }
 
                 // TODO - debugs
-                if (numBytes == maxMsgSize) {
+                if (numBytes == 1) {
                     boolean error = false;
 //                    if (ParallelOps.worldProcRank == 33) {
                         StringBuilder sb = new StringBuilder();
