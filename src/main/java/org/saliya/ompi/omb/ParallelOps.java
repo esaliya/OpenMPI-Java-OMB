@@ -406,6 +406,7 @@ public class ParallelOps {
         *  making memory maps. Also, this should be done only when running in uniform settings*/
         if (!isHeterogeneous && mmapProcsCount == 1) {
             ParallelOps.worldProcsComm.allGather(sbuff, numBytes, MPI.BYTE, rbuff, numBytes, MPI.BYTE);
+            return;
         }
 
         int offset = mmapProcRank*numBytes;
