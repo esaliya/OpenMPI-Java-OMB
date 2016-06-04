@@ -98,7 +98,7 @@ public class OsuAllGather {
                             } else if (c != 'z') {
                                 error = true;
                                 System.out.println("Rank: " + ParallelOps.worldProcRank +
-                                        " Error in allgather - other ranks' content should be all 'z's but it's " + c);
+                                        " Error in allgather - other ranks' content should be all 'z's but it's [" + c + "]");
                                 break;
                             }
 //                            sb.append(c).append(' ');
