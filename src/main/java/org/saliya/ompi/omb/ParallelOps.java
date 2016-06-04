@@ -414,6 +414,8 @@ public class ParallelOps {
                 count = mmapLockOne.readInt(COUNT);
             }
             cgProcComm.allGather(mmapCollectiveByteBuffer, numBytes*mmapProcsCount, MPI.BYTE, mmapCollectiveByteBuffer2, numBytes*mmapProcsCount, MPI.BYTE);
+            // TODO - debugs
+            System.out.println("Rank: " + worldProcRank + " mmap lead came after MPI allgather");
             mmapLockOne.writeInt(COUNT, 1);
             mmapLockOne.writeBoolean(FLAG, true);
         } else {
