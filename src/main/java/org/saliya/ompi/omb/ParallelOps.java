@@ -394,6 +394,8 @@ public class ParallelOps {
         if(isMmapLead){
             cgProcComm.allGather(mmapCollectiveByteBuffer, numBytes*mmapProcsCount, MPI.BYTE, mmapCollectiveByteBuffer2, numBytes*mmapProcsCount, MPI.BYTE);
         }
+        // TODO - debugs
+        System.out.println("--Rank: " + worldProcRank + " " + (char)mmapCollectiveBytes2.readByte(0)+ " " + (char)mmapCollectiveBytes2.readByte(1));
         worldProcsComm.barrier();
         for (int i = 0; i < numBytes*mmapProcsCount; ++i){
             rbuff.put(i, mmapCollectiveBytes2.readByte(i));
