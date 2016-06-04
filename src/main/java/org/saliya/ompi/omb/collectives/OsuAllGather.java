@@ -111,7 +111,7 @@ public class OsuAllGather {
                         if (!error){
                             System.out.println("All good");
                         }
-                        System.out.println(sb.toString());
+//                        System.out.println(sb.toString());
 //                    }
                     stop = true;
                     break;
@@ -133,7 +133,7 @@ public class OsuAllGather {
             ParallelOps.worldProcsComm.reduce(vbuff,1,MPI.DOUBLE,MPI.SUM,0);
             avgLatency = vbuff[0] / ParallelOps.worldProcsCount;
             if (ParallelOps.worldProcRank == 0){
-                System.out.println(numBytes + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
+//                System.out.println(numBytes + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
             }
             ParallelOps.worldProcsComm.barrier();
         }
