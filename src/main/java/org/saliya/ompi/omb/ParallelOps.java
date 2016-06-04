@@ -410,9 +410,13 @@ public class ParallelOps {
         }
 
         int offset = mmapProcRank*numBytes;
-        for (int i = 0; i < numBytes; ++i){
+        long fromAddress = getDirectByteBufferAddressViaField(sbuff);
+        long toAddress = getDirectByteBufferAddressViaField(mmapCollectiveByteBuffer);
+        UNSAFE.copyMemory(fromAddress, toAddress+offset, numBytes);
+
+        /*for (int i = 0; i < numBytes; ++i){
             mmapCollectiveBytes.writeByte(offset+i, sbuff.get(i));
-        }
+        }*/
         mmapLockOne.addAndGetInt(COUNT, 1);
 
         if(isMmapLead){
@@ -439,8 +443,8 @@ public class ParallelOps {
         /*for (int i = 0; i < numBytes*worldProcsCount; ++i){
             rbuff.put(i, mmapCollectiveBytes2.readByte(i));
         }*/
-        long fromAddress = getDirectByteBufferAddressViaField(mmapCollectiveByteBuffer2);
-        long toAddress = getDirectByteBufferAddressViaField(rbuff);
+        fromAddress = getDirectByteBufferAddressViaField(mmapCollectiveByteBuffer2);
+        toAddress = getDirectByteBufferAddressViaField(rbuff);
         UNSAFE.copyMemory(fromAddress, toAddress, numBytes*worldProcsCount);
     }
 }
