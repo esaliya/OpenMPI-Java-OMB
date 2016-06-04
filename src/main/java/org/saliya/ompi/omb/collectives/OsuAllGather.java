@@ -101,12 +101,12 @@ public class OsuAllGather {
                                         " Error in allgather - other ranks' content should be all 'z's but it's [" + c + "]");
                                 break;
                             }
-//                            sb.append(c).append(' ');
+                            sb.append(c).append(' ');
                         }
                         if (!error){
                             System.out.println("All good");
                         }
-//                        System.out.println(sb.toString());
+                        System.out.println(sb.toString());
 //                    }
                     stop = true;
                     break;
