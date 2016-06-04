@@ -72,7 +72,7 @@ public class OsuAllGather {
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
                 // TODO - debugs
-                System.out.println("Rank: " + ParallelOps.worldProcRank  + " numBytes=" + numBytes + " of " + maxMsgSize + " i=" + i + " of " + iterations);
+                //System.out.println("Rank: " + ParallelOps.worldProcRank  + " numBytes=" + numBytes + " of " + maxMsgSize + " i=" + i + " of " + iterations);
                 tStart = MPI.wtime();
                 if (!isMmap) {
                     ParallelOps.worldProcsComm.allGather(sbuff, numBytes, MPI.BYTE, rbuff, numBytes, MPI.BYTE);
