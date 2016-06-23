@@ -83,7 +83,7 @@ public class OsuBroadcast {
                 }
 
                 // TODO - debugs
-                if (numBytes == maxMsgSize) {
+                /*if (numBytes == maxMsgSize) {
 //                    if (ParallelOps.worldProcRank == 22 || ParallelOps.worldProcRank == 43) {
                         boolean error = false;
                         StringBuilder sb = new StringBuilder();
@@ -103,7 +103,7 @@ public class OsuBroadcast {
 //                    }
                     stop = true;
                     break;
-                }
+                }*/
 
                 ParallelOps.worldProcsComm.barrier();
             }

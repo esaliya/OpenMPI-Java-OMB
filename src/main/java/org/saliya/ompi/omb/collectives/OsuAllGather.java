@@ -34,7 +34,6 @@ public class OsuAllGather {
         ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
         Boolean isMmap = Boolean.parseBoolean(args[3]);
 
-
         int byteBytes = maxMsgSize;
         ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
         ByteBuffer rbuff = MPI.newByteBuffer(byteBytes * ParallelOps.worldProcsCount);

@@ -3,12 +3,14 @@ package org.saliya.ompi.omb.collectives;
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
+import org.saliya.ompi.omb.ParallelOps;
 import org.saliya.ompi.util.MpiOps;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class OsuAllReduce {
-    public static void main(String[] args) throws MPIException {
+    public static void main(String[] args) throws MPIException, IOException {
         MPI.Init(args);
 
         Intracomm comm = MPI.COMM_WORLD;
@@ -29,6 +31,10 @@ public class OsuAllReduce {
         if (args.length == 2){
             iterations = iterationsLarge = Integer.parseInt(args[1]);
         }
+
+        String mmapDir = args[2];
+        ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
+        Boolean isMmap = Boolean.parseBoolean(args[3]);
 
         int floatBytes = (maxMsgSize/4) * 4;
         ByteBuffer sbuff = MPI.newByteBuffer(floatBytes);
