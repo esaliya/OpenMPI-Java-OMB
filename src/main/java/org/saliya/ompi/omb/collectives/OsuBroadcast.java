@@ -51,7 +51,7 @@ public class OsuBroadcast {
 
 
         // Note. binding main (hard code to juliet assuming non heterogeneous case)
-        int numThreads = 24/(ParallelOps.worldProcsCount/ParallelOps.nodeCount);
+        int numThreads = 24/(ParallelOps.worldProcsPerNode);
         BitSet bitSet = ThreadBitAssigner.getBitSet(ParallelOps.worldProcRank, 0, numThreads, (ParallelOps.nodeCount));
         Affinity.setAffinity(bitSet);
 
