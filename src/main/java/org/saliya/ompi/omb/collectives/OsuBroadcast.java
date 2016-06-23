@@ -3,11 +3,14 @@ package org.saliya.ompi.omb.collectives;
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
+import net.openhft.affinity.Affinity;
 import org.saliya.ompi.omb.ParallelOps;
 import org.saliya.ompi.util.MpiOps;
+import org.saliya.ompi.util.ThreadBitAssigner;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 
 /**
  * @author Saliya Ekanayake (esaliya at gmail dot com)
@@ -45,6 +48,12 @@ public class OsuBroadcast {
             System.out.println(msg);
             //System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
         }
+
+
+        // Note. binding main (hard code to juliet assuming non heterogeneous case)
+        int numThreads = 24/(ParallelOps.worldProcsCount/ParallelOps.nodeCount);
+        BitSet bitSet = ThreadBitAssigner.getBitSet(ParallelOps.worldProcRank, 0, numThreads, (ParallelOps.nodeCount));
+        Affinity.setAffinity(bitSet);
 
         // TODO - debugs
         boolean stop = false;
