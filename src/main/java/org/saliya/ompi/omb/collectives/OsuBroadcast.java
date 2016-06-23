@@ -35,9 +35,12 @@ public class OsuBroadcast {
         }
 
         String mmapDir = args[2];
-        ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
+
 
         Boolean isMmap = Boolean.parseBoolean(args[3]);
+
+        ParallelOps.nodeCount = Integer.parseInt(args[4]);
+        ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
 
         int byteBytes = maxMsgSize;
         ByteBuffer sbuff = MPI.newByteBuffer(byteBytes);
@@ -52,7 +55,6 @@ public class OsuBroadcast {
 
         // Note. binding main (hard code to juliet assuming non heterogeneous case)
         int numThreads = 24/(ParallelOps.worldProcsPerNode);
-        System.out.println("***" + numThreads + " " + ParallelOps.worldProcsPerNode);
         BitSet bitSet = ThreadBitAssigner.getBitSet(ParallelOps.worldProcRank, 0, numThreads, (ParallelOps.nodeCount));
         Affinity.setAffinity(bitSet);
 
