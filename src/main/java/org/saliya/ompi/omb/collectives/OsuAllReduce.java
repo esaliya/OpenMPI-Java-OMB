@@ -3,15 +3,17 @@ package org.saliya.ompi.omb.collectives;
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
+import net.openhft.affinity.Affinity;
 import org.saliya.ompi.omb.ParallelOps;
 import org.saliya.ompi.util.MpiOps;
+import org.saliya.ompi.util.ThreadBitAssigner;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 
 public class OsuAllReduce {
     public static void main(String[] args) throws MPIException, IOException {
-        MPI.Init(args);
 
         Intracomm comm = MPI.COMM_WORLD;
         int rank = comm.getRank();
@@ -33,8 +35,9 @@ public class OsuAllReduce {
         }
 
         String mmapDir = args[2];
-        ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
         Boolean isMmap = Boolean.parseBoolean(args[3]);
+        ParallelOps.nodeCount = Integer.parseInt(args[4]);
+        ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
 
         int floatBytes = (maxMsgSize/4) * 4;
         ByteBuffer sbuff = MPI.newByteBuffer(floatBytes);
@@ -51,6 +54,11 @@ public class OsuAllReduce {
             System.out.println(msg);
             System.out.println("#Bytes\tAvgLatency(us)\tMinLatency(us)\tMaxLatency(us)\t#Itr");
         }
+
+        // Note. binding main (hard code to juliet assuming non heterogeneous case)
+        int numThreads = 24/(ParallelOps.worldProcsPerNode);
+        BitSet bitSet = ThreadBitAssigner.getBitSet(ParallelOps.worldProcRank, 0, numThreads, (ParallelOps.nodeCount));
+        Affinity.setAffinity(bitSet);
 
         double [] vbuff = new double[1];
         for (int numFloats = 1; numFloats*4 <= maxMsgSize; numFloats *= 2){
@@ -87,6 +95,6 @@ public class OsuAllReduce {
             }
             comm.barrier();
         }
-        MPI.Finalize();
+        ParallelOps.endParallelism();
     }
 }
