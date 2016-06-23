@@ -14,11 +14,6 @@ import java.util.BitSet;
 
 public class OsuAllReduce {
     public static void main(String[] args) throws MPIException, IOException {
-
-        Intracomm comm = MPI.COMM_WORLD;
-        int rank = comm.getRank();
-        int numProcs = comm.getSize();
-
         int maxMsgSize = 1<<20; // 1MB, i.e. 1024x1024 bytes
         int largeMsgSize = 8192;
         int skip = 200;
@@ -38,6 +33,10 @@ public class OsuAllReduce {
         Boolean isMmap = Boolean.parseBoolean(args[3]);
         ParallelOps.nodeCount = Integer.parseInt(args[4]);
         ParallelOps.setupParallelism(args, maxMsgSize, mmapDir);
+
+        Intracomm comm = MPI.COMM_WORLD;
+        int rank = comm.getRank();
+        int numProcs = comm.getSize();
 
         int floatBytes = (maxMsgSize/4) * 4;
         ByteBuffer sbuff = MPI.newByteBuffer(floatBytes);
