@@ -55,12 +55,13 @@ public class OsuAllReduce {
         }
 
         // Note. binding main (hard code to juliet assuming non heterogeneous case)
-        int numThreads = 24/(ParallelOps.worldProcsPerNode);
-        BitSet bitSet = ThreadBitAssigner.getBitSet(ParallelOps.worldProcRank, 0, numThreads, (ParallelOps.nodeCount));
-        Affinity.setAffinity(bitSet);
+//        int numThreads = 24/(ParallelOps.worldProcsPerNode);
+//        BitSet bitSet = ThreadBitAssigner.getBitSet(ParallelOps.worldProcRank, 0, numThreads, (ParallelOps.nodeCount));
+//        Affinity.setAffinity(bitSet);
 
         double [] vbuff = new double[1];
-        for (int numFloats = 1; numFloats*4 <= maxMsgSize; numFloats *= 2){
+//        for (int numFloats = 1; numFloats*4 <= maxMsgSize; numFloats *= 2){
+        for (int numFloats = 1; numFloats*8 <= maxMsgSize; numFloats *= 2){
             if (numFloats > largeMsgSize){
                 skip = skipLarge;
                 iterations = iterationsLarge;
@@ -74,7 +75,8 @@ public class OsuAllReduce {
                 // TODO - testing with a barrier just before comm
                 comm.barrier();
                 tStart = MPI.wtime();
-                comm.allReduce(sbuff,rbuff,numFloats,MPI.FLOAT, MPI.SUM);
+//                comm.allReduce(sbuff,rbuff,numFloats,MPI.FLOAT, MPI.SUM);
+                comm.allReduce(sbuff,rbuff,numFloats,MPI.DOUBLE, MPI.SUM);
                 tStop = MPI.wtime();
                 if (i >= skip){
                     timer += tStop - tStart;
@@ -92,7 +94,8 @@ public class OsuAllReduce {
             comm.reduce(vbuff,1,MPI.DOUBLE,MPI.SUM,0);
             avgLatency = vbuff[0] / numProcs;
             if (rank == 0){
-                System.out.println(numFloats*4 + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
+                System.out.println(numFloats*8 + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
+//                System.out.println(numFloats*4 + "\t" + avgLatency +"\t" + minLatency + "\t" + maxLatency + "\t" + iterations);
             }
             comm.barrier();
         }
