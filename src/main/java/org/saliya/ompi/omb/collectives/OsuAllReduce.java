@@ -71,6 +71,8 @@ public class OsuAllReduce {
             double tStart, tStop;
             double minLatency, maxLatency, avgLatency;
             for (int i = 0; i < iterations + skip; ++i){
+                // TODO - testing with a barrier just before comm
+                comm.barrier();
                 tStart = MPI.wtime();
                 comm.allReduce(sbuff,rbuff,numFloats,MPI.FLOAT, MPI.SUM);
                 tStop = MPI.wtime();
